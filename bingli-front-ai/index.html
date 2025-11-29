@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="resource-logo.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= VITE_APP_TITLE || '胃组织病理图像处理软件' %></title>
+</head>
+
+<body style="margin: 0px;">
+  <div id="app"></div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+<style>
+  /* 设置根元素的默认字体大小 */
+  html {
+    font-size: 16px;
+    /* 1rem = 16px */
+  }
+
+  /* 使用媒体查询调整字体大小 */
+  @media (max-width: 1200px) {
+    html {
+      font-size: 14px;
+      /* 1rem = 14px */
+    }
+  }
+
+  @media (max-width: 992px) {
+    html {
+      font-size: 12px;
+      /* 1rem = 14px */
+    }
+  }
+
+  @media (max-width: 768px) {
+    html {
+      font-size: 11px;
+      /* 1rem = 11px */
+    }
+  }
+
+  @media (max-width: 576px) {
+    html {
+      font-size: 10px;
+      /* 1rem = 10px */
+    }
+  }
+</style>
+
+</html>

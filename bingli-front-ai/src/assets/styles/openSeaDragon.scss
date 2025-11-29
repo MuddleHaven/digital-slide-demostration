@@ -1,0 +1,303 @@
+.flex-grow {
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.full {
+  width: 100vw;
+  height: 100vh;
+}
+
+.opensea {
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  position: absolute;
+}
+
+.canvas {
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  position: absolute;
+  pointer-events: none;
+}
+
+.center-card-height {
+  height: 94vh;
+}
+
+.center-card {
+  width: 100%;
+  display: flex;
+  position: relative;
+  flex-direction: column;
+
+  /* 垂直排列子元素 */
+  .navigator {
+    width: 232px;
+    height: 178px;
+    border-radius: 25px 25px 25px 25px;
+    border: 2px solid #FFFFFF;
+    position: absolute;
+    left: 10px;
+    z-index: 3;
+    top: 10px
+  }
+
+  .measure-box {
+    width: 355px;
+    height: 50px;
+    background: #FBFBFF;
+    box-shadow: inset 0px 0px 25px 0px rgba(36, 43, 160, 0.05);
+    border-radius: 44px 44px 44px 44px;
+    position: absolute;
+    z-index: 3;
+    top: 60px;
+    right: 10px;
+    display: flex;
+    align-items: center;
+    /* justify-content: space-around; */
+  }
+
+  .toolbox {
+    width: 325px;
+    height: 44px;
+    background: #FBFBFF;
+    box-shadow: inset 0px 0px 25px 0px rgba(36, 43, 160, 0.05);
+    border-radius: 44px 44px 44px 44px;
+    position: absolute;
+    z-index: 3;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    .label {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-left: 12px;
+      cursor: pointer;
+
+      img {
+        width: 22px;
+        height: 22px;
+      }
+
+      p {
+        font-family: Source Han Sans SC;
+        font-weight: 400;
+        font-size: 14px;
+        color: #666666;
+        text-align: left;
+        font-style: normal;
+        text-transform: none;
+        margin-left: 5px;
+      }
+    }
+
+  }
+
+  .slide-control {
+    width: 44px;
+    height: 178px;
+    background: #FBFBFF;
+    box-shadow: inset 0px 0px 25px 0px rgba(36, 43, 160, 0.05);
+    border-radius: 44px 44px 44px 44px;
+    position: absolute;
+    bottom: 80px;
+    left: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    z-index: 3;
+  }
+
+  .focus-choose {
+    width: 620px;
+    height: 60px;
+    position: absolute;
+    left: 10px;
+    bottom: 0px;
+    display: flex;
+    align-items: center;
+    z-index: 3;
+
+    .box {
+      // width: 582px;
+      height: 44px;
+      background: #FBFBFF;
+      box-shadow: inset 0px 0px 25px 0px rgba(36, 43, 160, 0.05);
+      border-radius: 44px 44px 44px 44px;
+      box-sizing: border-box;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+
+      font-family: Source Han Sans SC;
+      font-weight: 400;
+      font-size: 14px;
+      color: #666666;
+      text-align: center;
+      font-style: normal;
+      text-transform: none;
+
+      .text {
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 70px;
+        height: 44px;
+      }
+
+      .focus {
+        width: 88px;
+        height: 42px;
+        background: #242BA0;
+        border-radius: 20px 20px 20px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #FFFFFF;
+        margin-right: -17px;
+        margin-left: -22px;
+      }
+    }
+
+    .expand-img {
+      margin-left: 10px;
+      width: 44px;
+      height: 44px;
+      cursor: pointer;
+    }
+  }
+
+  .algorithm-btn {
+    position: absolute;
+    bottom: 0;
+    right: 10px;
+    // width: 230px;
+    min-height: 70px;
+    max-height: 120px;
+    padding-bottom: 10px;
+    display: flex;
+    align-items: end;
+    justify-content: space-around;
+    z-index: 3;
+
+    .primary-btn {
+      width: 130px;
+      height: 44px;
+      border-radius: 44px 44px 44px 44px;
+    }
+  }
+}
+
+.btn {
+  width: 130px;
+  height: 44px;
+  background: #242BA0;
+  box-shadow: inset 0px 0px 25px 0px rgba(36, 43, 160, 0.05);
+  border-radius: 44px 44px 44px 44px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 12px;
+  cursor: pointer;
+
+  p {
+    font-family: Source Han Sans SC, Source Han Sans SC;
+    font-weight: 400;
+    font-size: 14px;
+    color: #FFFFFF;
+    line-height: 14px;
+    text-align: left;
+    font-style: normal;
+    text-transform: none;
+  }
+}
+
+.labelCard {
+  position: absolute;
+  bottom: 40%;
+  right: 30%;
+  width: 400px;
+  height: 120px;
+  z-index: 3;
+
+  .label-btn {
+    margin-top: 20px;
+    display: flex;
+    justify-content: end;
+  }
+}
+
+.control-circle {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(to right, transparent, #FFFFFF);
+  border-radius: 16px;
+  position: absolute;
+  left: -16px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+
+  img {
+    position: absolute;
+    right: 5px;
+  }
+}
+
+.control-circle2 {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(to right, transparent, #FFFFFF);
+  border-radius: 16px;
+  position: absolute;
+  right: -16px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+
+  img {
+    position: absolute;
+    left: 5px;
+  }
+}
+
+.tip_text {
+  font-family: Source Han Sans SC, Source Han Sans SC;
+  font-weight: 400;
+  font-size: 14px;
+  color: #666666;
+  line-height: 14px;
+  text-align: center;
+  font-style: normal;
+  text-transform: none;
+}
+
+.heatmap-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+  pointer-events: none;
+  display: none;
+}
