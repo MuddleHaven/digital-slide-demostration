@@ -3,6 +3,7 @@ import { message, Modal } from 'ant-design-vue';
 import { ExclamationCircleOutlined } from '@ant-design/icons-vue';
 import * as sliceAPI from '@/service/slice.js';
 import * as userAPI from '@/service/user.js';
+import { useSliceStore } from '@/stores/slice-store';
 import { useRouter } from 'vue-router';
 import { 
   SliceStatusEnum, 
@@ -16,6 +17,7 @@ import {
 
 export function useSlideList() {
   const router = useRouter();
+  const sliceStore = useSliceStore();
   
   // Table Data
   const tableData = ref([]);
@@ -232,10 +234,8 @@ export function useSlideList() {
   };
 
   const handleSingleSlice = (id) => {
-    // Navigate to detail with ID in query or params
-    // Assuming route name 'SliceDetail' or path '/detail'
-    // User asked to pass IDs via route params/query
-    router.push({ path: '/detail', query: { id } });
+    sliceStore.setDetailIds([String(id)]);
+    router.push({ path: '/detail' });
   };
 
   const handleBatchSlice = () => {
@@ -243,8 +243,8 @@ export function useSlideList() {
       message.error("未选择切片");
       return;
     }
-    // Pass multiple IDs
-    router.push({ path: '/detail', query: { ids: selectedRowKeys.value.join(',') } });
+    sliceStore.setDetailIds(selectedRowKeys.value.map(String));
+    router.push({ path: '/detail' });
   };
 
   // Result Modal Logic

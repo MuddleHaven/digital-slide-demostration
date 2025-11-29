@@ -22,7 +22,7 @@
       <a-col :span="getRightSpan()">
         <!-- 根据当前选择的面板类型显示不同内容 -->
         <template v-if="pannel == '整体结果'">
-          <ResultPanel :key="currentSlicePart" :conditions="simplifiedIllCondition" :advice="advice"
+          <ResultPannel :key="currentSlicePart" :conditions="simplifiedIllCondition" :advice="advice"
             @update:advice="advice = $event" @save-and-view="openMaskRes" @next-slice="gotoNext"
             @toggle-collapse="changeRightCard(false)" />
         </template>
