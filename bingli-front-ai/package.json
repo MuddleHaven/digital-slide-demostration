@@ -47,7 +47,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.22.0",
-    "@types/openseadragon": "3.0.10",
+    "@types/openseadragon": "5.0.1",
     "@vitejs/plugin-vue": "^5.2.3",
     "eslint": "^9.22.0",
     "eslint-plugin-vue": "^10.0.0",
