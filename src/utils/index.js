@@ -33,3 +33,8 @@ export const throttle = (func, wait) => {
     }
   };
 }
+
+// get image prefix
+export const getImagePrefix = () => {
+  return `${import.meta.env.VITE_BASE_URL}/app_data`;
+}

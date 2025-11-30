@@ -56,7 +56,13 @@
           onChange: (page, size) => { currentPage = page; pageSize = size; fetchData(); },
           onShowSizeChange: (current, size) => { currentPage = 1; pageSize = size; fetchData(); }
         }"
-        :row-selection="{ selectedRowKeys: selectedRowKeys, onChange: keys => selectedRowKeys = keys }"
+        :row-selection="{ 
+          selectedRowKeys: selectedRowKeys, 
+          onChange: keys => selectedRowKeys = keys,
+          getCheckboxProps: record => ({
+            disabled: !isSliceProcessed(record.status)
+          })
+        }"
         row-key="id"
       >
         <template #bodyCell="{ column, record, index }">

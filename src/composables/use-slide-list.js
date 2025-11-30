@@ -104,11 +104,7 @@ export function useSlideList() {
         tableData.value = data.records.map((record) => ({
           ...record,
           no: `No.${record.sliceNo}`,
-          img: record.thumbnailPath ? record.thumbnailPath.replace(/\\/g, '/') : '',
-          time: record.processTime,
-          focus: record.magnification,
-          quality: record.overallQuality,
-          collectionArea: collectionArea,
+          img: record.thumbnailPath ? record.thumbnailPath.replace(/\\/g, '/') : '@/assets/icons/nullImage.jpg',
         }));
         
         totalSize.value = data.total;

@@ -5,7 +5,7 @@ import { useRouter } from "vue-router";
 // request config
 const RequestConfig = {
   BASE_URL_LOCAL: import.meta.env.VITE_BASE_URL,
-  BASE_URL_SERVER: "http://113.57.115.197:9526/",
+  BASE_URL_SERVER: "http://113.57.115.197:9526",
   // 设置超时时间为1min
   TIMEOUT: 60 * 1000,
 };

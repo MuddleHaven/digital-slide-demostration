@@ -3,7 +3,7 @@
     <div class="osd-content">
       <h2>Openseadragon Viewer Placeholder</h2>
       <p>Slide ID: {{ slideId }}</p>
-      <p>Status: {{ aiResult ? 'AI Analyzed' : 'Waiting...' }}</p>
+      <p>Status: {{ detail ? 'AI Analyzed' : 'Waiting...' }}</p>
       <!-- Future implementation of OSD, Annotations, Heatmaps here -->
     </div>
   </div>
@@ -11,8 +11,9 @@
 
 <script setup>
 defineProps({
-  slideId: String,
-  aiResult: Object
+  slideId: Number,
+  aiResult: Object,
+  detail: Object
 });
 </script>
 

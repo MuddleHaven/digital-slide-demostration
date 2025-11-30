@@ -210,11 +210,9 @@ export function useUpload(fetchDataCallback) {
       const response = await sliceAPI.getUploadProgress();
       if (response.code === 200 && response.data) {
         uploadList.value = response.data.map((item) => ({
-          id: item.id,
-          img: item.thumbnailPath ? item.thumbnailPath.replace(/\\/g, "/") : '',
-          name: item.name,
+          ...item,
+          img: item.thumbnailPath ? item.thumbnailPath.replace(/\\/g, "/") : '@/assets/icons/nullImage.jpg',
           percent: item.progress * 100,
-          status: item.status,
         }));
       }
     } catch (error) {

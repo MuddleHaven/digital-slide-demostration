@@ -1,34 +1,59 @@
 <template>
-  <div class="list-container">
-    <div class="title">
+  <div class="list-container card-style" :class="{ 'collapsed-container': collapsed }">
+    <!-- Header -->
+    <div class="title" v-if="!collapsed">
       <span class="l-c-text">切片列表</span>
-      <a-select v-model:value="pannelValue" :options="options" class="status_select" style="width: 7vw;"
-        @change="onPannelChange" />
+      <a-select v-model:value="pannelValue" :options="options" class="status_select" style="width: 90px;"
+        @change="onPannelChange" size="small" />
     </div>
+    <div class="title collapsed-title" v-else>
+      <span>列表</span>
+    </div>
+
+    <!-- Scrollable List -->
     <div class="list-scroll-container">
       <div v-for="(data, index) in slices" :key="data.id" class="list_column"
-        :class="{ 'shadowCard': activeIndex === index }" @click="onSliceSelect(index)">
-        <div class="list_img">
-          <img :src="data.img" alt="" @error="handleImageError" />
-        </div>
-        <div style="margin-left: 10px;">
-          <div class="number_c">{{ data.no }}</div>
-          <div class="symptom_c">{{ data.diseaseName || data.disease }}</div>
-          <div class="tag_list">
-             <a-tag v-if="data.status === 1" color="orange">上传中</a-tag>
-             <a-tag v-else-if="data.status === 3" color="blue">解析中</a-tag>
-             <a-tag v-else-if="data.status === 6" color="green">已完成</a-tag>
+        :class="{ 'shadowCard': activeIndex === index, 'collapsed-item': collapsed }" @click="onSliceSelect(index)">
+        
+        <!-- Expanded View -->
+        <template v-if="!collapsed">
+          <div class="list_img">
+            <img :src="data.img" alt="" @error="handleImageError" />
           </div>
-          <div>
-            <span class="time_c">{{ data.processTime || data.uploadTime }}</span>
+          <div style="margin-left: 10px; flex: 1; min-width: 0;">
+            <div class="number_c" :title="data.no">{{ data.no }}</div>
+            
+            <!-- Disease Tag (Using custom style to match reference image) -->
+            <div v-if="data.diseaseName || data.disease" class="disease-tag-wrapper">
+               <span class="disease-tag">{{ data.diseaseName || data.disease }}</span>
+            </div>
+            
+            <div class="time_c">{{ data.processTime || data.uploadTime }}</div>
           </div>
-        </div>
+          <!-- Close/Delete Icon for active item (Reference style) -->
+          <div v-if="activeIndex === index" class="close-icon">
+             <!-- Placeholder for close/delete, strictly visual as per request for now -->
+             ✕
+          </div>
+        </template>
+
+        <!-- Collapsed View -->
+        <template v-else>
+          <div class="collapsed-content">
+             <div class="collapsed-img" v-if="data.img">
+                <img :src="data.img" @error="handleImageError" />
+             </div>
+             <div class="collapsed-no" :title="data.no">{{ data.no.slice(-4) }}</div>
+          </div>
+        </template>
       </div>
     </div>
+    
+    <!-- Toggle Button (Floating outside or integrated) -->
+    <!-- Reference shows a circle button on the edge. Since this is a floating card, we can put it on the right edge vertically centered -->
     <div class="control-circle" @click="onToggleCollapse">
-      <!-- Simple arrows using characters if icons missing, or adjust path -->
-      <span v-if="!collapsed">&lt;</span>
-      <span v-else>&gt;</span>
+       <span v-if="!collapsed">&lt;</span>
+       <span v-else>&gt;</span>
     </div>
   </div>
 </template>
@@ -79,7 +104,11 @@ const onToggleCollapse = () => {
 };
 
 const handleImageError = (e) => {
-  e.target.src = '/src/assets/nullImage.jpg';
+  // Ensure we have a valid fallback. 
+  // If the path is relative and fails, it might need a public URL prefix or verify asset placement.
+  // For now, using a placeholder from assets if available, or a generic color block.
+  e.target.style.display = 'none';
+  e.target.parentElement.style.backgroundColor = '#f0f0f0';
 };
 </script>
 
@@ -90,53 +119,115 @@ const handleImageError = (e) => {
   flex-direction: column;
   background: white;
   position: relative;
+  transition: width 0.3s, all 0.3s;
+  width: 300px; /* Default width */
+  pointer-events: auto;
+}
+
+.card-style {
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  overflow: visible; /* Allow toggle button to hang out */
+}
+
+.collapsed-container {
+  width: 80px;
 }
 
 .title {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px;
-  border-bottom: 1px solid #eee;
+  padding: 15px 20px;
+  /* border-bottom: 1px solid #f0f0f0; */
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.collapsed-title {
+  justify-content: center;
+  padding: 15px 5px;
+  font-size: 14px;
 }
 
 .list-scroll-container {
   flex: 1;
   overflow-y: auto;
+  padding: 0 10px 10px 10px;
+}
+
+/* Hide scrollbar for cleaner look */
+.list-scroll-container::-webkit-scrollbar {
+  width: 4px;
+}
+.list-scroll-container::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 2px;
 }
 
 .list_column {
   display: flex;
-  padding: 10px;
+  padding: 12px;
   cursor: pointer;
-  border-bottom: 1px solid #f0f0f0;
+  border-radius: 12px;
+  margin-bottom: 8px;
+  transition: all 0.2s;
+  position: relative;
+  background: white;
 }
 
 .list_column:hover {
-  background-color: #f5f7fa;
+  background-color: #f9f9f9;
 }
 
 .shadowCard {
-  background-color: #e6f7ff;
-  border-right: 3px solid #1890ff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  background-color: white; /* Override hover if needed, reference image shows white card with shadow */
+  border: 1px solid #eee; /* Subtle border */
+}
+
+.collapsed-item {
+  justify-content: center;
+  padding: 10px 5px;
+}
+
+.list_img {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f5f5f5;
+  flex-shrink: 0;
 }
 
 .list_img img {
-  width: 60px;
-  height: 60px;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  border-radius: 4px;
 }
 
 .number_c {
   font-weight: bold;
-  font-size: 14px;
+  font-size: 13px;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 4px;
 }
 
-.symptom_c {
+.disease-tag-wrapper {
+  margin-bottom: 4px;
+}
+
+.disease-tag {
+  display: inline-block;
+  border: 1px solid #ffccc7;
+  color: #ff4d4f;
+  background: #fff1f0;
   font-size: 12px;
-  color: #666;
-  margin: 2px 0;
+  padding: 1px 8px;
+  border-radius: 4px;
 }
 
 .time_c {
@@ -144,9 +235,45 @@ const handleImageError = (e) => {
   color: #999;
 }
 
+.close-icon {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  color: #999;
+  font-size: 12px;
+}
+
+/* Collapsed Styles */
+.collapsed-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.collapsed-img {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #eee;
+  margin-bottom: 5px;
+}
+
+.collapsed-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.collapsed-no {
+  font-size: 10px;
+  color: #666;
+}
+
+/* Toggle Button */
 .control-circle {
   position: absolute;
-  right: -15px;
+  right: -15px; /* Hangs off the right edge */
   top: 50%;
   width: 30px;
   height: 30px;
@@ -158,5 +285,8 @@ const handleImageError = (e) => {
   justify-content: center;
   cursor: pointer;
   z-index: 10;
+  color: #666;
+  font-weight: bold;
+  transform: translateY(-50%);
 }
 </style>
