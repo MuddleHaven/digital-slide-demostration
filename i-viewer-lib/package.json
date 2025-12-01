@@ -1,0 +1,58 @@
+{
+  "name": "i-viewer-lib",
+  "type": "module",
+  "version": "0.0.12",
+  "private": true,
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/i-viewer-lib.es.js",
+      "require": "./dist/i-viewer-lib.umd.js"
+    },
+    "./filter": {
+      "types": "./dist/types/filter/index.d.ts",
+      "import": "./dist/filter/index.js"
+    },
+    "./osd": {
+      "types": "./dist/types/osd/index.d.ts",
+      "import": "./dist/osd/index.js"
+    },
+    "./overlay": {
+      "types": "./dist/types/overlay/index.d.ts",
+      "import": "./dist/overlay/index.js"
+    },
+    "./screen-shot": {
+      "types": "./dist/types/screen-shot/index.d.ts",
+      "import": "./dist/screen-shot/index.js"
+    }
+  },
+  "main": "dist/i-viewer-lib.umd.js",
+  "module": "dist/i-viewer-lib.es.js",
+  "types": "dist/types/index.d.ts",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "html2canvas": "^1.4.1",
+    "konva": "^9.3.20",
+    "lodash": "^4.17.21",
+    "nanoid": "^5.1.5",
+    "openseadragon": "^5.0.1"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "^4.16.1",
+    "@types/jquery": "^3.5.32",
+    "@types/lodash": "^4.17.19",
+    "@types/node": "^24.0.4",
+    "@types/openseadragon": "^4.1.0",
+    "eslint": "^9.29.0",
+    "eslint-plugin-format": "^1.0.1",
+    "rollup-plugin-visualizer": "^6.0.3",
+    "typescript": "~5.8.3",
+    "vite": "^6.3.5",
+    "vite-plugin-dts": "^4.5.4"
+  }
+}

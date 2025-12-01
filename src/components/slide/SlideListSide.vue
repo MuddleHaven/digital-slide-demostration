@@ -52,14 +52,15 @@
     <!-- Toggle Button (Floating outside or integrated) -->
     <!-- Reference shows a circle button on the edge. Since this is a floating card, we can put it on the right edge vertically centered -->
     <div class="control-circle" @click="onToggleCollapse">
-       <span v-if="!collapsed">&lt;</span>
-       <span v-else>&gt;</span>
+       <LeftOutlined v-if="!collapsed" />
+       <RightOutlined v-else />
     </div>
   </div>
 </template>
 
 <script setup>
 import { computed } from 'vue';
+import { LeftOutlined, RightOutlined } from '@ant-design/icons-vue';
 
 const props = defineProps({
   slices: {
@@ -80,7 +81,7 @@ const props = defineProps({
   },
   collapsed: {
     type: Boolean,
-    default: false
+    default: true
   }
 });
 

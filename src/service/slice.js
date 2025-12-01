@@ -328,8 +328,7 @@ export function getAIQualityContours(sliceId) { //获取AI质量轮廓线数据
   });
 }
 
-//关于批注：
-
+//关于annotations
 export function getAnnos(sliceId) { //获取批注信息
   return request({
     url: '/anno/getAnnos',

@@ -34,7 +34,23 @@ export const throttle = (func, wait) => {
   };
 }
 
-// get image prefix
+/**
+ * Get image prefix
+ * @returns {string} imagePrefix
+ */
 export const getImagePrefix = () => {
   return `${import.meta.env.VITE_BASE_URL}/app_data`;
+}
+
+/**
+ * Get tile url
+ * @param {string} tileUrl 
+ * @returns {string} tileUrl
+ */
+export const getTileUrl = (tileUrl) => {
+  if (tileUrl && !tileUrl.startsWith('http')) {
+    // Assuming same base URL logic as thumbnail if needed
+    tileUrl = `${import.meta.env.VITE_BASE_URL}/app_data${tileUrl}`;
+  }
+  return tileUrl;
 }
