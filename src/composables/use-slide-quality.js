@@ -22,21 +22,20 @@ export function useSlideQuality() {
 
       // Load Manual Quality
       const res = await sliceAPI.getQCResult(sliceId);
-      
+
       // Initialize structure (simplified)
       qualityData.value = {
         quality: res.data ? res.data.overallQuality : '',
         aiQuality: aiQ,
         ranseErrors: [{ title: "染色差异", value: res.data?.stainingDiff || '无' }],
         qiepianErrors: [
-            { title: "折叠", value: res.data?.folding || '无' },
-            { title: "裂痕", value: res.data?.cracks || '无' }
-            // ... others
+          { title: "折叠", value: res.data?.folding || '无' },
+          { title: "裂痕", value: res.data?.cracks || '无' }
         ],
         makepianErrors: [{ title: "标签不端正", value: res.data?.labelMisaligned || '无' }],
         saomiaoErrors: [{ title: "扫描模糊", value: res.data?.scanBlur || '无' }]
       };
-      
+
     } catch (e) {
       console.error("Load quality error", e);
     }

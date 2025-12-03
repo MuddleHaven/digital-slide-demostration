@@ -71,7 +71,7 @@ export function initAnno(anno, selectedAnno, selectedElement, commentVisible, co
     }
   });
 
-  // // 设置anno的aiAnnotator引用
+  // 设置anno的aiAnnotator引用
   anno.value.aiAnnotator = aiAnnotator;
 
   // 更新选择的节点id (selectedAnno)

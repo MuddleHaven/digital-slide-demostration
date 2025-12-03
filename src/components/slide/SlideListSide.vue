@@ -3,7 +3,7 @@
     <!-- Header -->
     <div class="title" v-if="!collapsed">
       <span class="l-c-text">切片列表</span>
-      <a-select v-model:value="pannelValue" :options="options" class="status_select" style="width: 90px;"
+      <a-select v-model:value="pannelValue" :options="options" class="status_select" style="width: 120px;"
         @change="onPannelChange" size="small" />
     </div>
     <div class="title collapsed-title" v-else>
@@ -50,7 +50,6 @@
     </div>
     
     <!-- Toggle Button (Floating outside or integrated) -->
-    <!-- Reference shows a circle button on the edge. Since this is a floating card, we can put it on the right edge vertically centered -->
     <div class="control-circle" @click="onToggleCollapse">
        <LeftOutlined v-if="!collapsed" />
        <RightOutlined v-else />
@@ -149,6 +148,16 @@ const handleImageError = (e) => {
   justify-content: center;
   padding: 15px 5px;
   font-size: 14px;
+}
+
+.l-c-text {
+  font-size: 16px;
+  color: #333;
+  font-weight: bold;
+}
+
+.status_select {
+  margin-left: auto;
 }
 
 .list-scroll-container {

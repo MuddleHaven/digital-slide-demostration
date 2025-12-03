@@ -1,8 +1,7 @@
 <template>
   <div class="osd-container">
     <!-- Main Viewer -->
-    <div :id="containerId" class="opensea">
-
+    <div :id="containerId" class="openseadragon">
 
     </div>
     <!-- Konva Overlay -->
@@ -11,6 +10,67 @@
     <!-- Controls Overlay (Navigator, etc.) -->
     <div class="controls-overlay">
       <div id="navigatorDiv" class="navigator"></div>
+    </div>
+
+    <!-- Bottom Right AI Controls -->
+    <div class="ai-controls-overlay">
+      <div class="algorithm-btn" v-if="contourDisplayArray.length > 0 || heatMapDisplayArray.length > 0">
+        <div class="control-row">
+           <!-- Contours -->
+           <div class="control-group" v-if="contourDisplayArray.length > 0">
+             <div v-for="data in contourDisplayArray.filter(e => e.display)" :key="data.type" class="control-item">
+                <a-badge v-if="data.badge" :count="data.badge" :offset="[-6, 4]" :title="data.title">
+                  <a-button 
+                    class="primary-btn" 
+                    :disabled="data.disabled" 
+                    :type="data.selected ? 'primary' : 'default'"
+                    style="width: 101px;" 
+                    @click="() => toggleContour(data)"
+                  >
+                    <span>{{ data.title ? data.title + ' ' : '' }}轮廓线</span>
+                  </a-button>
+                </a-badge>
+                <a-button 
+                  v-else
+                  class="primary-btn" 
+                  :disabled="data.disabled" 
+                  :type="data.selected ? 'primary' : 'default'"
+                  style="width: 101px;" 
+                  @click="() => toggleContour(data)"
+                >
+                  <span>{{ data.title ? data.title + ' ' : '' }}轮廓线</span>
+                </a-button>
+             </div>
+           </div>
+
+           <!-- Heatmaps -->
+           <div class="control-group" v-if="heatMapDisplayArray.length > 0">
+             <div v-for="data in heatMapDisplayArray.filter(e => e.display)" :key="data.type" class="control-item">
+               <a-badge v-if="data.badge" :count="data.badge" :offset="[-6, 4]" :title="data.title">
+                  <a-button 
+                    class="primary-btn" 
+                    :disabled="data.disabled" 
+                    :type="data.selected ? 'primary' : 'default'"
+                    style="width: 101px;" 
+                    @click="() => toggleHeatmap(data)"
+                  >
+                    <span>{{ data.title ? data.title + ' ' : '' }}热力图</span>
+                  </a-button>
+               </a-badge>
+               <a-button 
+                  v-else
+                  class="primary-btn" 
+                  :disabled="data.disabled" 
+                  :type="data.selected ? 'primary' : 'default'"
+                  style="width: 101px;" 
+                  @click="() => toggleHeatmap(data)"
+                >
+                  <span>{{ data.title ? data.title + ' ' : '' }}热力图</span>
+                </a-button>
+             </div>
+           </div>
+        </div>
+      </div>
     </div>
 
     <!-- Bottom Toolbar -->
@@ -89,6 +149,7 @@ import { useOpenseadragon } from '@/composables/use-openseadragon';
 import { useOsdKonva } from '@/composables/use-osd-konva';
 import { useMeasurement } from '@/composables/use-measurement';
 import { useAnnotation } from '@/composables/use-annotation';
+import { useAiVisualization } from '@/composables/use-ai-visualization';
 import {
   LineChartOutlined,
   EditOutlined,
@@ -129,6 +190,15 @@ const {
   currentTool: currentAnnoTool,
   loadAnnotations
 } = useAnnotation(stage, layer, viewer);
+
+// AI Visualization Hook
+const {
+  initAiVisualization,
+  heatMapDisplayArray,
+  contourDisplayArray,
+  toggleHeatmap,
+  toggleContour
+} = useAiVisualization(viewer, null);
 
 const activeTool = ref(null); // null, 'measure', 'annotation'
 const selectedAnnoKeys = ref(['rectangle']); // Default
@@ -182,6 +252,9 @@ onMounted(() => {
   if (props.slideId) {
     openSlide(props.slideId);
     loadAnnotations(props.slideId);
+    if (props.aiResult) {
+        initAiVisualization(props.slideId, props.aiResult);
+    }
   }
 });
 
@@ -190,16 +263,21 @@ watch(() => props.slideId, (newId) => {
   if (newId) {
     openSlide(newId);
     loadAnnotations(newId);
+    // Re-init AI logic if aiResult exists
+    if (props.aiResult) {
+        initAiVisualization(newId, props.aiResult);
+    }
   }
 });
 
 // Watch for AI results (Placeholder for future implementation of overlays/annotations)
 watch(() => props.aiResult, (newVal) => {
-  if (newVal && viewer.value) {
-    console.log("AI Result updated, ready to render annotations/heatmaps", newVal);
-    // Logic to add overlays would go here or in a separate composable/function
+  if (newVal && viewer.value && props.slideId) {
+    console.log("AI Result updated, initializing visualization", newVal);
+    initAiVisualization(props.slideId, newVal);
   }
 });
+
 </script>
 
 <style scoped>
@@ -210,7 +288,7 @@ watch(() => props.aiResult, (newVal) => {
   /* background-color removed to avoid black borders when dragging */
 }
 
-.opensea {
+.openseadragon {
   width: 100%;
   height: 100%;
   z-index: 2;
@@ -248,6 +326,40 @@ watch(() => props.aiResult, (newVal) => {
   border-radius: 25px;
   border: 2px solid #FFFFFF;
   pointer-events: auto;
+}
+
+.ai-controls-overlay {
+  position: absolute;
+  bottom: 80px; /* Above bottom toolbar */
+  right: 10px;
+  z-index: 5;
+}
+
+.algorithm-btn {
+  background: rgba(255, 255, 255, 0.8);
+  padding: 8px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.control-row {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.control-item {
+  width: 101px;
+}
+
+.primary-btn {
+  font-size: 12px;
 }
 
 .bottom-toolbar {

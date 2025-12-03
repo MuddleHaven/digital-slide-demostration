@@ -503,9 +503,6 @@ export function useAnnotation(stage, layer, viewer) {
               radiusY: data.ry
             });
           } else if (anno.type === 'POLYGON') {
-            // data.points is [[x,y], [x,y]] or [x,y,x,y]?
-            // Log says: "points":[[37973...],[39849...]] (Array of arrays)
-            // Konva Line points expects [x1, y1, x2, y2...] flat array
             const flatPoints = data.points.flat();
             shape = new Konva.Line({
               ...commonAttrs,
