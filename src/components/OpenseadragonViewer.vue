@@ -263,6 +263,7 @@ watch(() => props.aiResult, (newVal) => {
   width: 100%;
   height: 100%;
   position: relative;
+  background-color: #FFFFFF;
   /* background-color removed to avoid black borders when dragging */
 }
 
