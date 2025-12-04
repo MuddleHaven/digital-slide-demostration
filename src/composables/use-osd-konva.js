@@ -25,20 +25,11 @@ export function useOsdKonva(viewer, containerId) {
 
     // Bind sync events
     viewer.value.addHandler('update-viewport', syncViewport);
-    viewer.value.addHandler('resize', syncViewport);
+    viewer.value.addHandler('resize', handleResize);
     viewer.value.addHandler('open', syncViewport);
 
     // Forward Zoom (Wheel) events from Konva container to OSD
     container.addEventListener('wheel', handleWheel, { passive: false });
-
-    // Forward Pan (Right-Click / Middle-Click) events
-    // Or handle drag manually if we want right-click pan
-    // For now, let's enable basic Zoom
-
-    // Actually, we can try to emulate OSD behavior:
-    // If Konva consumes the event, we do nothing.
-    // If Konva doesn't consume it (e.g. right click?), we might want to pan.
-    // But Konva stage captures all.
 
     // Implement Right-Click Pan
     stage.value.on('contentContextmenu', (e) => {
@@ -129,17 +120,25 @@ export function useOsdKonva(viewer, containerId) {
     stage.value.rotation(rotation);
 
     // 4. Size (Handle Resize)
-    const container = document.getElementById(containerId);
-    if (container && (stage.value.width() !== container.clientWidth || stage.value.height() !== container.clientHeight)) {
-      stage.value.width(container.clientWidth);
-      stage.value.height(container.clientHeight);
-    }
-
+    // Only check size if explicitly needed or on resize event
+    // For performance, we trust the container size doesn't change on every viewport update
+    
     // 5. Flip (Optional, if needed)
     const flip = viewport.getFlip();
     stage.value.container().style.transform = flip ? 'scaleX(-1)' : 'scaleX(1)';
 
-    stage.value.batchDraw();
+    // Use draw() instead of batchDraw() to sync with OSD's animation loop and avoid jitter
+    stage.value.draw();
+  };
+
+  const handleResize = () => {
+    if (!viewer.value || !stage.value) return;
+    const container = document.getElementById(containerId);
+    if (container) {
+      stage.value.width(container.clientWidth);
+      stage.value.height(container.clientHeight);
+      syncViewport();
+    }
   };
 
   onUnmounted(() => {
@@ -155,7 +154,7 @@ export function useOsdKonva(viewer, containerId) {
 
     if (viewer.value) {
       viewer.value.removeHandler('update-viewport', syncViewport);
-      viewer.value.removeHandler('resize', syncViewport);
+      viewer.value.removeHandler('resize', handleResize);
       viewer.value.removeHandler('open', syncViewport);
     }
   });

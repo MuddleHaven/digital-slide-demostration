@@ -72,12 +72,6 @@ export function useAnnotation(stage, layer, viewer) {
     if (viewer.value) {
       viewer.value.addHandler('animation', () => {
         updateTransformerConfig();
-        // Update all shapes stroke width? 
-        // Ideally we iterate layer children, or just update new ones.
-        // For performance, maybe only update selected or on create.
-        // But existing shapes will look thin when zoomed in?
-        // Actually, Konva scale scales everything.
-        // If we want constant screen size stroke, we need to update it.
 
         const scale = getScaleCorrection();
         layer.value.find('.annotation').forEach(node => {

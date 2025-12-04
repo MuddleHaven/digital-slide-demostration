@@ -16,59 +16,37 @@
     <div class="ai-controls-overlay">
       <div class="algorithm-btn" v-if="contourDisplayArray.length > 0 || heatMapDisplayArray.length > 0">
         <div class="control-row">
-           <!-- Contours -->
-           <div class="control-group" v-if="contourDisplayArray.length > 0">
-             <div v-for="data in contourDisplayArray.filter(e => e.display)" :key="data.type" class="control-item">
-                <a-badge v-if="data.badge" :count="data.badge" :offset="[-6, 4]" :title="data.title">
-                  <a-button 
-                    class="primary-btn" 
-                    :disabled="data.disabled" 
-                    :type="data.selected ? 'primary' : 'default'"
-                    style="width: 101px;" 
-                    @click="() => toggleContour(data)"
-                  >
-                    <span>轮廓线</span>
-                  </a-button>
-                </a-badge>
-                <a-button 
-                  v-else
-                  class="primary-btn" 
-                  :disabled="data.disabled" 
-                  :type="data.selected ? 'primary' : 'default'"
-                  style="width: 101px;" 
-                  @click="() => toggleContour(data)"
-                >
+          <!-- Contours -->
+          <div class="control-group" v-if="contourDisplayArray.length > 0">
+            <div v-for="data in contourDisplayArray.filter(e => e.display)" :key="data.type" class="control-item">
+              <a-badge v-if="data.badge" :count="data.badge" :offset="[-6, 4]" :title="data.title">
+                <a-button class="primary-btn" :disabled="data.disabled" :type="data.selected ? 'primary' : 'default'"
+                  style="width: 101px;" @click="() => toggleContour(data)">
                   <span>轮廓线</span>
                 </a-button>
-             </div>
-           </div>
+              </a-badge>
+              <a-button v-else class="primary-btn" :disabled="data.disabled"
+                :type="data.selected ? 'primary' : 'default'" style="width: 101px;" @click="() => toggleContour(data)">
+                <span>轮廓线</span>
+              </a-button>
+            </div>
+          </div>
 
-           <!-- Heatmaps -->
-           <div class="control-group" v-if="heatMapDisplayArray.length > 0">
-             <div v-for="data in heatMapDisplayArray.filter(e => e.display)" :key="data.type" class="control-item">
-               <a-badge v-if="data.badge" :count="data.badge" :offset="[-6, 4]" :title="data.title">
-                  <a-button 
-                    class="primary-btn" 
-                    :disabled="data.disabled" 
-                    :type="data.selected ? 'primary' : 'default'"
-                    style="width: 101px;" 
-                    @click="() => toggleHeatmap(data)"
-                  >
-                    <span>热力图</span>
-                  </a-button>
-               </a-badge>
-               <a-button 
-                  v-else
-                  class="primary-btn" 
-                  :disabled="data.disabled" 
-                  :type="data.selected ? 'primary' : 'default'"
-                  style="width: 101px;" 
-                  @click="() => toggleHeatmap(data)"
-                >
+          <!-- Heatmaps -->
+          <div class="control-group" v-if="heatMapDisplayArray.length > 0">
+            <div v-for="data in heatMapDisplayArray.filter(e => e.display)" :key="data.type" class="control-item">
+              <a-badge v-if="data.badge" :count="data.badge" :offset="[-6, 4]" :title="data.title">
+                <a-button class="primary-btn" :disabled="data.disabled" :type="data.selected ? 'primary' : 'default'"
+                  style="width: 101px;" @click="() => toggleHeatmap(data)">
                   <span>热力图</span>
                 </a-button>
-             </div>
-           </div>
+              </a-badge>
+              <a-button v-else class="primary-btn" :disabled="data.disabled"
+                :type="data.selected ? 'primary' : 'default'" style="width: 101px;" @click="() => toggleHeatmap(data)">
+                <span>热力图</span>
+              </a-button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -253,7 +231,7 @@ onMounted(() => {
     openSlide(props.slideId);
     loadAnnotations(props.slideId);
     if (props.aiResult) {
-        initAiVisualization(props.slideId, props.aiResult);
+      initAiVisualization(props.slideId, props.aiResult);
     }
   }
 });
@@ -265,7 +243,7 @@ watch(() => props.slideId, (newId) => {
     loadAnnotations(newId);
     // Re-init AI logic if aiResult exists
     if (props.aiResult) {
-        initAiVisualization(newId, props.aiResult);
+      initAiVisualization(newId, props.aiResult);
     }
   }
 });
@@ -330,7 +308,8 @@ watch(() => props.aiResult, (newVal) => {
 
 .ai-controls-overlay {
   position: absolute;
-  bottom: 80px; /* Above bottom toolbar */
+  bottom: 80px;
+  /* Above bottom toolbar */
   right: 10px;
   z-index: 5;
 }
@@ -339,7 +318,7 @@ watch(() => props.aiResult, (newVal) => {
   background: rgba(255, 255, 255, 0.8);
   padding: 8px;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .control-row {

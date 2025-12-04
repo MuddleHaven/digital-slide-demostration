@@ -81,10 +81,6 @@ export function useOpenseadragon(containerId) {
 
       currentSlideData.value = data;
 
-      // Construct the DeepZoom Image object
-      // Prefix logic might be needed if paths are relative, similar to thumbnail
-      // The reference code uses data.slice.deepzoomFilePath directly.
-      // We might need to adjust if it's a relative path.
       let fileUrl = data.slice.deepzoomFilePath;
       // tileUrl
       const tileUrl = getTileUrl(fileUrl);
@@ -102,10 +98,6 @@ export function useOpenseadragon(containerId) {
           },
         },
       });
-
-      // Optional: Set tile sources ID if needed for tracking
-      // viewer.value.tileSources = [slideId];
-
     } catch (error) {
       console.error("Failed to open slide", error);
     }

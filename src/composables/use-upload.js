@@ -182,10 +182,6 @@ export function useUpload(fetchDataCallback) {
           message.warn("目前没有正在处理的切片");
           return;
         }
-        // Check if any slice is processing (logic from original file)
-        // Original: if length == 1, warn "processing". This logic seems specific, I'll keep it simple for now or strictly follow.
-        // The original logic was: if length == 1, warn. Maybe because cancelUploads is for batch?
-        // I'll just call the API.
         let res = await sliceAPI.cancelUploads();
         if (res.code === 200) {
           message.success("取消成功");
@@ -203,8 +199,9 @@ export function useUpload(fetchDataCallback) {
     }
   };
 
-  // Fetch upload progress/list from server (for the separate modal if used, or just tracking)
-  // The original code had `uploadList` populated by `getUploadProgress`
+  /**
+   * Fetch upload progress/list from server
+   */
   const fetchUploadData = async () => {
     try {
       const response = await sliceAPI.getUploadProgress();

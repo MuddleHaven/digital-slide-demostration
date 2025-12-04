@@ -46,41 +46,41 @@ export function useMeasurement(stage, layer, viewer) {
 
     // Update Delete Icons
     layer.value.find('.measurement-delete-group').forEach(group => {
-       const arrowId = group.getAttr('arrowId');
-       if (!arrowId) return;
-       
-       const arrowNode = layer.value.findOne('#' + arrowId);
-       if (arrowNode) {
-         // Calculate position based on arrow end point + offset
-         const points = arrowNode.points();
-         // points are [x1, y1, x2, y2]
-         const endX = points[2];
-         const endY = points[3];
-         
-         // We want visual offset of e.g. 15px
-         // Offset in canvas coords = 15 * scale
-         const offset = 15 * scale;
-         
-         group.position({
-            x: endX + offset,
-            y: endY - offset
-         });
-       }
-       
-       // Update icon size
-       group.find('.measurement-delete-icon').forEach(node => {
-          node.radius(8 * scale);
-          node.strokeWidth(1 * scale);
-       });
-       
-       group.find('.measurement-delete-text').forEach(node => {
-          node.fontSize(12 * scale);
-          // Center the X
-          node.offset({
-              x: node.width() / 2,
-              y: node.height() / 2
-          });
-       });
+      const arrowId = group.getAttr('arrowId');
+      if (!arrowId) return;
+
+      const arrowNode = layer.value.findOne('#' + arrowId);
+      if (arrowNode) {
+        // Calculate position based on arrow end point + offset
+        const points = arrowNode.points();
+        // points are [x1, y1, x2, y2]
+        const endX = points[2];
+        const endY = points[3];
+
+        // We want visual offset of e.g. 15px
+        // Offset in canvas coords = 15 * scale
+        const offset = 15 * scale;
+
+        group.position({
+          x: endX + offset,
+          y: endY - offset
+        });
+      }
+
+      // Update icon size
+      group.find('.measurement-delete-icon').forEach(node => {
+        node.radius(8 * scale);
+        node.strokeWidth(1 * scale);
+      });
+
+      group.find('.measurement-delete-text').forEach(node => {
+        node.fontSize(12 * scale);
+        // Center the X
+        node.offset({
+          x: node.width() / 2,
+          y: node.height() / 2
+        });
+      });
     });
 
     layer.value.batchDraw();
@@ -224,8 +224,8 @@ export function useMeasurement(stage, layer, viewer) {
 
       // Create a delete button group attached to the measurement
       deleteGroup = new Konva.Group({
-        x: endX + offset, 
-        y: endY - offset, 
+        x: endX + offset,
+        y: endY - offset,
         name: 'measurement-delete-group',
         arrowId: arrow.id() // Link to arrow
       });
@@ -280,10 +280,6 @@ export function useMeasurement(stage, layer, viewer) {
       const labelNode = label;
       const deleteGroupNode = deleteGroup;
 
-      // Also, update delete button position if we move the measurement?
-      // Currently measurement is not draggable. If it becomes draggable, we need a parent Group.
-      // For now, just static.
-
       layer.value.add(deleteGroup);
       layer.value.batchDraw();
     }
@@ -295,9 +291,6 @@ export function useMeasurement(stage, layer, viewer) {
     text = null;
     deleteGroup = null;
   };
-
-  // Watch for external enable/disable
-  // We'll control this via explicit calls from component
 
   return {
     initMeasurement,
