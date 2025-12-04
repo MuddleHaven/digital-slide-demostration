@@ -1,7 +1,8 @@
+import '@annotorious/openseadragon/annotorious-openseadragon.css';
 import { ref, watch, reactive } from 'vue';
 import h337 from '@sitka/heatmap.js';
 import { createOSDAnnotator } from '@annotorious/openseadragon';
-import { Deck, COORDINATE_SYSTEM } from '@deck.gl/core';
+import { Deck, COORDINATE_SYSTEM, OrthographicView } from '@deck.gl/core';
 import { HeatmapLayer } from '@deck.gl/aggregation-layers';
 import { v4 as uuid } from 'uuid';
 import * as sliceAPI from '@/service/slice.js';
@@ -18,7 +19,7 @@ class HeatMapOptions {
     this.type = type;
     this.display = display;
     this.title = title;
-    this.style = style; // 0: default, ...
+    this.style = style;
     this.selected = false;
     this.disabled = false;
     this.badge = '';
@@ -62,7 +63,14 @@ export function useAiVisualization(viewer, sliceData) {
         drawingEnabled: false,
         autoSave: false, // AI annotations are read-only usually
         userSelectAction: "NONE", // Disable selection
-        readOnly: true
+        readOnly: true,
+        style: () => {
+          return {
+            stroke: '#FFFF00',
+            strokeWidth: 1,
+            fill: 'rgba(255, 255, 0, 0.1)'
+          };
+        }
       });
     }
   };
@@ -159,11 +167,6 @@ export function useAiVisualization(viewer, sliceData) {
     if (option.selected) {
       await fetchData(currentSliceId.value);
 
-      // Determine if we should use deck.gl or h337
-      // For now, let's default to h337 as per "existing implementation" request, 
-      // or we can switch. Let's implement h337 first as default.
-      // To use deck.gl, uncomment the deckGL line.
-
       displayFilteredHeatMap(option);
       // displayDeckGLHeatMap(option); 
 
@@ -249,14 +252,6 @@ export function useAiVisualization(viewer, sliceData) {
 
     viewer.value.addOverlay(overlay);
 
-    // Calculate sizes like reference
-    // We need to wait for OSD to update overlay size?
-    // Or we use the container size logic from reference more strictly.
-
-    // The reference implementation calculates startWidth based on elementDiv.offsetWidth.
-    // If the overlay is added with width: 1, OSD sets its size.
-    // We might need to defer this slightly or ensure elementDiv has layout.
-
     const updateHeatmap = () => {
       const zoomLevel = viewer.value.viewport.getZoom();
       // elementDiv size in pixels on screen
@@ -267,21 +262,6 @@ export function useAiVisualization(viewer, sliceData) {
 
       const startWidth = rect.width / zoomLevel;
       const startHeight = rect.height / zoomLevel;
-
-      // Re-calculate points if size changes significantly?
-      // No, points are calculated once based on "startWidth" which is base resolution?
-      // Actually, in reference, points are calculated ONCE using startWidth.
-      // And then canvas is SCALED using transform.
-
-      // So we need a stable "startWidth".
-      // If we use width: 1 overlay, OSD scales the div.
-      // At zoom 1, div width = image width (in screen pixels? No, world coordinates).
-
-      // Let's try to calculate startWidth from Image Source directly, as it should be 1:1 with image pixels if we want highest quality.
-      // OR stick to the reference: `elementDiv.offsetWidth / zoomLevel`.
-
-      // We need to do this calculation ONCE when creating the heatmap instance.
-      // But elementDiv needs to be in DOM and sized.
 
       const displayObjc = { gradient: { 0.4: 'blue', 0.6: 'cyan', 0.7: 'lime', 0.8: 'yellow', 1.0: 'red' } };
       const points = [];
@@ -336,18 +316,11 @@ export function useAiVisualization(viewer, sliceData) {
           canvasElement.style.transformOrigin = '0 0';
           canvasElement.style.opacity = "0.95";
           canvasElement.style.filter = 'blur(6px)';
-
-          // Ensure canvas fills the div visually
-          // canvasElement.style.width = '100%';
-          // canvasElement.style.height = '100%';
-          // Note: h337 sets canvas width/height to container size at creation.
-          // We use transform to scale it up/down as OSD zooms the container.
         }
       });
       heatmapResizeObserver.observe(elementDiv); // Observe elementDiv, not container
     };
 
-    // Wait for next tick or short delay to ensure elementDiv is in DOM and sized by OSD
     setTimeout(updateHeatmap, 100);
   };
 
@@ -389,6 +362,7 @@ export function useAiVisualization(viewer, sliceData) {
     elementDiv.id = 'heatmap-deckgl-overlay';
     elementDiv.style.width = '100%';
     elementDiv.style.height = '100%';
+    elementDiv.style.pointerEvents = 'none';
 
     viewer.value.addOverlay({
       element: elementDiv,
@@ -396,31 +370,14 @@ export function useAiVisualization(viewer, sliceData) {
       checkResize: false
     });
 
-    // We need the overlay to track OSD. 
-    // DeckGL can work with OSD but it's complex to sync views perfectly.
-    // Simplest way: DeckGL as an Overlay (DIV) inside OSD.
-    // But DeckGL canvas needs to be sized.
-
-    // Let's make the overlay div match the image aspect ratio.
-    // And use DeckGL to render into it.
-    // We use COORDINATE_SYSTEM.CARTESIAN or NORMALIZED?
-    // DeckGL HeatmapLayer usually works in pixels or meters.
-
-    // If we use normalized coordinates [0..1, 0..1], we can scale the view.
-    // But DeckGL inside OSD overlay might behave weirdly with events.
-    // pointerEvents: none.
-    elementDiv.style.pointerEvents = 'none';
-
     const deck = new Deck({
       parent: elementDiv,
+      views: [new OrthographicView({ id: 'ortho' })],
       initialViewState: {
         target: [0.5, 0.5, 0],
-        zoom: 0 // We might need to sync zoom? 
-        // Or if the DIV itself is scaled by OSD, we just render flat 0..1 space?
+        zoom: 0
       },
-      views: [
-        // We need a view that maps 0..1 to the canvas size
-      ],
+      controller: false,
       layers: [
         new HeatmapLayer({
           id: 'heatmap-layer',
@@ -428,20 +385,24 @@ export function useAiVisualization(viewer, sliceData) {
           getPosition: d => d.position,
           getWeight: d => d.weight,
           aggregation: 'SUM',
-          radiusPixels: 30, // This might need tuning or scaling
+          radiusPixels: 30,
           intensity: 1,
           threshold: 0.1
         })
       ],
-      style: { width: '100%', height: '100%' }
+      style: { width: '100%', height: '100%' },
+      onResize: ({ width, height }) => {
+        if (width > 0) {
+          const zoom = Math.log2(width);
+          deck.setProps({
+            viewState: {
+              target: [0.5, 0.5, 0],
+              zoom: zoom
+            }
+          });
+        }
+      }
     });
-
-    // NOTE: DeckGL inside OSD Overlay is tricky because OSD scales the DOM element.
-    // If the DOM element size changes (CSS transform), DeckGL canvas resolution might look bad
-    // or DeckGL might try to resize.
-
-    // The reference implementation for DeckGL used `heatmapResizeObserver` too.
-    // It seems they just put DeckGL in the div and let it be.
   };
 
   const hideHeatmap = () => {
@@ -460,6 +421,7 @@ export function useAiVisualization(viewer, sliceData) {
 
   const displayAICurve = (option) => {
     clearAICurve();
+    if (!aiAnnotator.value || !viewer.value) return;
 
     const isAuxiliary = option.type === HeatMapType.Auxiliary;
     const data = isAuxiliary ? subCurveData.value : curveData.value;
@@ -467,41 +429,59 @@ export function useAiVisualization(viewer, sliceData) {
     if (!data || !data.pointList) return;
 
     const { curveCols, curveRows, pointList, max_min_values } = data;
-
-    // Get Image Size
+    
+    // Get DZI Image Size
     const tiledImage = viewer.value.world.getItemAt(0);
-    const dziWidth = tiledImage.getContentSize().x;
-    const dziHeight = tiledImage.getContentSize().y;
+    if (!tiledImage) return;
+    
+    const dziSize = tiledImage.getContentSize();
+    const dziWidth = dziSize.x;
+    const dziHeight = dziSize.y;
 
+    // Helper: Map coordinates from curve space to DZI space
     const mapToDzi = (x, y) => ({
-      x: (x / curveCols) * dziWidth,
-      y: (y / curveRows) * dziHeight
+      x: (parseFloat(x) / curveCols) * dziWidth,
+      y: (parseFloat(y) / curveRows) * dziHeight
     });
 
     pointList.forEach((points, index) => {
-      // Convert points
+      // 1. Map Points
       const geometryPoints = points.map(([x, y]) => {
         const p = mapToDzi(x, y);
         return [p.x, p.y];
       });
 
-      // Annotorious Polygon Format
-      // Annotorious expects a Polygon selector to look like:
-      // <svg><polygon points="x1,y1 x2,y2 ..." /></svg>
+      // 2. Map Bounds (if available)
+      let bounds = {};
+      if (max_min_values && max_min_values[index]) {
+        const v = max_min_values[index];
+        const minP = mapToDzi(v.minX, v.minY);
+        const maxP = mapToDzi(v.maxX, v.maxY);
+        
+        bounds = {
+          minX: minP.x,
+          minY: minP.y,
+          maxX: maxP.x,
+          maxY: maxP.y
+        };
+      }
 
-      const pointsString = geometryPoints.map(p => p.join(',')).join(' ');
-
-      // Create Annotation
+      // 3. Create Annotation
       const annotation = {
-        "@context": "http://www.w3.org/ns/anno.jsonld",
         id: uuid(),
-        type: "Annotation",
-        body: [],
+        type: "AI-curve", // Used for styling
         target: {
           selector: {
-            type: "SvgSelector",
-            value: `<svg><polygon points="${pointsString}" /></svg>`
-          }
+            type: "POLYGON",
+            geometry: {
+              bounds: bounds,
+              points: geometryPoints
+            }
+          },
+          creator: {
+            id: "auto-display",
+            isGuest: true,
+          },
         },
         properties: {
           isAi: true,
@@ -509,11 +489,7 @@ export function useAiVisualization(viewer, sliceData) {
         }
       };
 
-      if (aiAnnotator.value) {
-        aiAnnotator.value.addAnnotation(annotation);
-        // Also select it if needed, or just show it. 
-        // Usually just showing is enough.
-      }
+      aiAnnotator.value.addAnnotation(annotation);
     });
   };
 

@@ -27,7 +27,7 @@
                     style="width: 101px;" 
                     @click="() => toggleContour(data)"
                   >
-                    <span>{{ data.title ? data.title + ' ' : '' }}轮廓线</span>
+                    <span>轮廓线</span>
                   </a-button>
                 </a-badge>
                 <a-button 
@@ -38,7 +38,7 @@
                   style="width: 101px;" 
                   @click="() => toggleContour(data)"
                 >
-                  <span>{{ data.title ? data.title + ' ' : '' }}轮廓线</span>
+                  <span>轮廓线</span>
                 </a-button>
              </div>
            </div>
@@ -54,7 +54,7 @@
                     style="width: 101px;" 
                     @click="() => toggleHeatmap(data)"
                   >
-                    <span>{{ data.title ? data.title + ' ' : '' }}热力图</span>
+                    <span>热力图</span>
                   </a-button>
                </a-badge>
                <a-button 
@@ -65,7 +65,7 @@
                   style="width: 101px;" 
                   @click="() => toggleHeatmap(data)"
                 >
-                  <span>{{ data.title ? data.title + ' ' : '' }}热力图</span>
+                  <span>热力图</span>
                 </a-button>
              </div>
            </div>
