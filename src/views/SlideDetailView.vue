@@ -1,43 +1,63 @@
 <template>
-  <div class="slide-detail-container">
+  <div class="relative w-screen h-screen overflow-hidden bg-black">
     <!-- Openseadragon Viewer (Full Screen) -->
-    <div class="viewer-wrapper">
-      <OpenseadragonViewer 
-        :slide-id="currentSlide?.id" 
-        :ai-result="resultData.aiResult" 
-        :detail="currentSlide"
-      />
+    <div class="absolute top-0 left-0 w-full h-full z-[1]">
+      <OpenseadragonViewer :slide-id="currentSlide?.id" :ai-result="resultData.aiResult" :detail="currentSlide" />
     </div>
 
     <!-- Left Sidebar: Floating Slide List -->
-    <div class="floating-sidebar">
-      <SlideListSide
-        :slices="slideList"
-        :active-index="currentIndex"
-        pannel="整体结果"
-        :options="[{ value: '整体结果', label: '整体结果' }, { value: '整体质量', label: '整体质量' }]"
-        :collapsed="leftCollapsed"
-        @select-slice="selectSlide"
-        @toggle-collapse="toggleLeft"
-        @update-pannel="handlePannelChange"
-      />
+    <div class="absolute top-20 left-5 bottom-5 z-100 pointer-events-none">
+      <div class="pointer-events-auto h-full">
+        <SlideListSide :slices="slideList" :active-index="currentIndex" :pannel="pannel" :options="options"
+          :collapsed="leftCollapsed" @select-slice="selectSlide" @toggle-collapse="toggleLeft"
+          @update-pannel="handlePannelChange" />
+      </div>
+    </div>
+
+    <!-- Right Sidebar: result panel -->
+    <div class="absolute top-5 right-5 bottom-5 z-100 pointer-events-none" :class="{'!right-0': rightCollapsed}">
+      <div class="pointer-events-auto h-full transition-all duration-300" :style="{ width: rightCollapsed ? '0px' : '350px' }">
+        <div v-if="!rightCollapsed" class="h-full">
+           <ResultPanel 
+             v-if="pannel === '整体结果'"
+             :conditions="resultConditions" 
+             :advice="resultData.aiResult?.advice || ''"
+             @update:advice="(val) => { if(resultData.aiResult) resultData.aiResult.advice = val }"
+             @toggle-collapse="toggleRight"
+             @save-and-view="handleSave"
+             @next-slice="handleNext"
+          />
+        </div>
+        <div v-if="rightCollapsed" class="absolute right-5 top-1/2 -translate-y-1/2 z-[101] pointer-events-auto">
+            <div class="w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center cursor-pointer text-gray-600 hover:text-blue-500" @click="toggleRight">
+              <LeftOutlined />
+            </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, watch, provide } from 'vue';
+import { useRouter } from 'vue-router';
+import { LeftOutlined } from '@ant-design/icons-vue';
 import { useSlideDetail } from '@/composables/use-slide-detail';
 import { useSlideResult } from '@/composables/use-slide-result';
 import { useSlideQuality } from '@/composables/use-slide-quality';
+import { AllPartConditions, SlicePart } from '@/common/options.js';
 
 // Components
 import SlideListSide from '@/components/slide/SlideListSide.vue';
+import ResultPanel from '@/components/slide/ResultPanel.vue';
 import OpenseadragonViewer from '@/components/OpenseadragonViewer.vue';
 
+// Router
+const router = useRouter();
+
 // Composables
-const { 
-  slideList, currentIndex, currentSlide, 
+const {
+  slideList, currentIndex, currentSlide,
   leftCollapsed, toggleLeft,
   initSlideList, selectSlide
 } = useSlideDetail();
@@ -45,13 +65,60 @@ const {
 const { resultData, loadResult } = useSlideResult();
 const { loadQuality } = useSlideQuality();
 
+const pannel = ref("整体结果");
+const rightCollapsed = ref(false);
+
+// 下拉选项
+const options = ref([
+  { value: '整体结果', label: '整体结果' },
+  { value: '整体质量', label: '整体质量' },
+]);
+
 // Provide current slice part to children
-const currentSlicePart = computed(() => currentSlide.value?.collectionArea || 'stomach');
+const currentSlicePart = computed(() => {
+  const collectionArea = currentSlide.value?.collectionArea || '胃';
+  let part = SlicePart.stomach
+  if (collectionArea === '胃') {
+    part = SlicePart.stomach;
+  } else if (collectionArea === '肺') {
+    part = SlicePart.colon;
+  } else if (collectionArea === '肠') {
+    part = SlicePart.lung;
+  }
+  return part;
+});
 provide('currentSlicePart', currentSlicePart);
+
+// Computed Conditions
+const resultConditions = computed(() => {
+  const part = currentSlicePart.value;
+  return AllPartConditions[part];
+});
 
 // Handlers
 const handlePannelChange = (val) => {
-  console.log("Panel changed to:", val);
+  pannel.value = val;
+};
+
+const toggleRight = () => {
+  rightCollapsed.value = !rightCollapsed.value;
+};
+
+const goBack = () => {
+  router.back();
+};
+
+const handleSave = () => {
+  // Implement save logic
+  console.log('Save and View clicked');
+};
+
+const handleNext = () => {
+  // Implement next slice logic
+  // Assuming sliceList and currentIndex are available
+  if (currentIndex.value < slideList.value.length - 1) {
+    selectSlide(currentIndex.value + 1);
+  }
 };
 
 // Watchers
@@ -68,36 +135,3 @@ onMounted(() => {
 });
 </script>
 
-<style scoped>
-.slide-detail-container {
-  position: relative;
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
-  background: #000; /* Viewer background usually dark */
-}
-
-.viewer-wrapper {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
-}
-
-.floating-sidebar {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  bottom: 20px;
-  z-index: 100;
-  /* Width is handled by the child component, but we can set a max/min here if needed */
-  pointer-events: none; /* Allow clicking through transparent areas if any */
-}
-
-/* Re-enable pointer events for the sidebar itself */
-.floating-sidebar > * {
-  pointer-events: auto;
-}
-</style>

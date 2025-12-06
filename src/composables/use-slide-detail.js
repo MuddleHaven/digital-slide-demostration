@@ -31,16 +31,25 @@ export function useSlideDetail() {
     try {
       const promises = detailIds.value.map(id => sliceAPI.getSingleSliceData(id));
       const results = await Promise.all(promises);
+      
+      // Get stored list data for extra fields (tagArr, etc.)
+      const storedListData = sliceStore.slideListData || [];
 
       slideList.value = results.map((res, index) => {
-        const data = res.data.slice; // Assuming structure based on getSingleSliceData
+        const data = res.data.slice; 
+        const storedItem = storedListData.find(item => String(item.id) === String(data.id));
+
+        // Merge properties: API data + Stored List Data (for tags/extra info)
         return {
           ...data,
+          ...(storedItem || {}), 
+          // Re-ensure essential fields
+          id: data.id,
           no: `No.${data.sliceNo}`,
           img: data.thumbnailPath ? `${getImagePrefix()}${data.thumbnailPath.replace(/\\/g, '/')}` : '@/assets/icons/nullImage.jpg',
         };
       });
-
+      console.log(slideList.value);
       if (slideList.value.length > 0) {
         selectSlide(0);
       }

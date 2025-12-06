@@ -60,7 +60,7 @@ export const SlicePart = Object.freeze({
 })
 
 
-const AllPartConditions = {
+export const AllPartConditions = {
   [SlicePart.lung]: lungConditions,
   [SlicePart.colon]: colonConditions,
   [SlicePart.stomach]: stomachConditions
@@ -85,7 +85,7 @@ const AllPartDiagnosisOptionsMap = {
  * @returns {Array} 返回对应的选项数组
  */
 export function getCheckoutOptionsArray(options, part = SlicePart.stomach) {
-  // console.log("getCheckoutOptionsArray", options, part);
+  console.log("----- getCheckoutOptionsArray", options, part);
   if (!options || !part) {
     return []
   }
@@ -97,7 +97,7 @@ export function getCheckoutOptionsArray(options, part = SlicePart.stomach) {
   const optionsDic = AllPartOptions[part];
   const optionsArray = optionsDic[options]
 
-  // console.log('getCheckoutOptionsArray', optionsDic, options, part, optionsArray);
+  console.log('---- getCheckoutOptionsArray', optionsDic, options, part, optionsArray);
 
   if (optionsArray === undefined) {
     return []

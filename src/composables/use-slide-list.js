@@ -231,6 +231,14 @@ export function useSlideList() {
 
   const handleSingleSlice = (id) => {
     sliceStore.setDetailIds([String(id)]);
+    
+    const selectedItem = tableData.value.find(item => String(item.id) === String(id));
+    if (selectedItem) {
+      sliceStore.setSlideListData([selectedItem]);
+    } else {
+      sliceStore.setSlideListData([]);
+    }
+
     router.push({ path: '/detail' });
   };
 
@@ -239,7 +247,12 @@ export function useSlideList() {
       message.error("未选择切片");
       return;
     }
-    sliceStore.setDetailIds(selectedRowKeys.value.map(String));
+    const ids = selectedRowKeys.value.map(String);
+    sliceStore.setDetailIds(ids);
+
+    const selectedItems = tableData.value.filter(item => ids.includes(String(item.id)));
+    sliceStore.setSlideListData(selectedItems);
+
     router.push({ path: '/detail' });
   };
 

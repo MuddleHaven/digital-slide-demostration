@@ -14,51 +14,50 @@
     <div class="list-scroll-container">
       <div v-for="(data, index) in slices" :key="data.id" class="list_column"
         :class="{ 'shadowCard': activeIndex === index, 'collapsed-item': collapsed }" @click="onSliceSelect(index)">
-        
         <!-- Expanded View -->
         <template v-if="!collapsed">
           <div class="list_img">
             <img :src="data.img" alt="" @error="handleImageError" />
           </div>
           <div style="margin-left: 10px; flex: 1; min-width: 0;">
-            <div class="number_c" :title="data.no">{{ data.no }}</div>
-            
-            <!-- Disease Tag (Using custom style to match reference image) -->
-            <div v-if="data.diseaseName || data.disease" class="disease-tag-wrapper">
-               <span class="disease-tag">{{ data.diseaseName || data.disease }}</span>
+            <div class="info-row">
+              <div class="number_c" :title="data.no">{{ data.no }}</div>
             </div>
-            
+
+            <div class="tag_list" v-if="data.tagArr && data.tagArr.length > 0" style="margin-top: 4px;">
+              <a-tag v-for="tag_item in data.tagArr" :key="tag_item.label"
+                :color="tag_item.style >= 2 ? 'red' : 'green'"
+                style="margin-right: 4px; margin-bottom: 4px; font-size: 10px; line-height: 18px;">
+                {{ tag_item.label }}
+              </a-tag>
+            </div>
+
             <div class="time_c">{{ data.processTime || data.uploadTime }}</div>
           </div>
-          <!-- Close/Delete Icon for active item (Reference style) -->
-          <div v-if="activeIndex === index" class="close-icon">
-             <!-- Placeholder for close/delete, strictly visual as per request for now -->
-             ✕
-          </div>
         </template>
-
         <!-- Collapsed View -->
         <template v-else>
           <div class="collapsed-content">
-             <div class="collapsed-img" v-if="data.img">
+            <a-tooltip :title="data.no" placement="right">
+              <div class="collapsed-img" v-if="data.img">
                 <img :src="data.img" @error="handleImageError" />
-             </div>
-             <div class="collapsed-no" :title="data.no">{{ data.no.slice(-4) }}</div>
+              </div>
+            </a-tooltip>
           </div>
         </template>
       </div>
     </div>
-    
+
     <!-- Toggle Button (Floating outside or integrated) -->
     <div class="control-circle" @click="onToggleCollapse">
-       <LeftOutlined v-if="!collapsed" />
-       <RightOutlined v-else />
+      <LeftOutlined v-if="!collapsed" />
+      <RightOutlined v-else />
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 import { LeftOutlined, RightOutlined } from '@ant-design/icons-vue';
 
 const props = defineProps({
@@ -84,6 +83,26 @@ const props = defineProps({
   }
 });
 
+watch(() => props.slices, (val) => {
+  // add tagArr in slices objcet
+  for (const slice of val) {
+    let tagArr = []
+    if (slice.mainLabel != null && slice.mainLabel != '') {
+      tagArr.push({
+        label: slice.mainLabel,
+        style: slice.mainHeatmapStyle
+      })
+    }
+    if (slice.subLabel != null && slice.subLabel != '') {
+      tagArr.push({
+        label: slice.subLabel,
+        style: slice.subHeatmapStyle
+      })
+    }
+    slice.tagArr = tagArr
+  }
+})
+
 const emit = defineEmits(['update-pannel', 'select-slice', 'toggle-collapse']);
 
 const pannelValue = computed({
@@ -104,9 +123,6 @@ const onToggleCollapse = () => {
 };
 
 const handleImageError = (e) => {
-  // Ensure we have a valid fallback. 
-  // If the path is relative and fails, it might need a public URL prefix or verify asset placement.
-  // For now, using a placeholder from assets if available, or a generic color block.
   e.target.style.display = 'none';
   e.target.parentElement.style.backgroundColor = '#f0f0f0';
 };
@@ -120,14 +136,15 @@ const handleImageError = (e) => {
   background: white;
   position: relative;
   transition: width 0.3s, all 0.3s;
-  width: 300px; /* Default width */
+  width: 300px;
   pointer-events: auto;
 }
 
 .card-style {
   border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  overflow: visible; /* Allow toggle button to hang out */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  overflow: visible;
+  /* Allow toggle button to hang out */
 }
 
 .collapsed-container {
@@ -170,6 +187,7 @@ const handleImageError = (e) => {
 .list-scroll-container::-webkit-scrollbar {
   width: 4px;
 }
+
 .list-scroll-container::-webkit-scrollbar-thumb {
   background: #ccc;
   border-radius: 2px;
@@ -191,9 +209,11 @@ const handleImageError = (e) => {
 }
 
 .shadowCard {
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  background-color: white; /* Override hover if needed, reference image shows white card with shadow */
-  border: 1px solid #eee; /* Subtle border */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background-color: white;
+  /* Override hover if needed, reference image shows white card with shadow */
+  border: 1px solid #eee;
+  /* Subtle border */
 }
 
 .collapsed-item {
@@ -228,6 +248,7 @@ const handleImageError = (e) => {
 
 .disease-tag-wrapper {
   margin-bottom: 4px;
+  grow: 1;
 }
 
 .disease-tag {
@@ -283,13 +304,14 @@ const handleImageError = (e) => {
 /* Toggle Button */
 .control-circle {
   position: absolute;
-  right: -15px; /* Hangs off the right edge */
+  right: -15px;
+  /* Hangs off the right edge */
   top: 50%;
   width: 30px;
   height: 30px;
   background: white;
   border-radius: 50%;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -298,5 +320,11 @@ const handleImageError = (e) => {
   color: #666;
   font-weight: bold;
   transform: translateY(-50%);
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 </style>

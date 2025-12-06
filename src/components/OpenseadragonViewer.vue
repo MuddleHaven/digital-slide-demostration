@@ -14,7 +14,8 @@
 
     <!-- Bottom Right AI Controls -->
     <div class="ai-controls-overlay">
-      <div class="algorithm-btn" v-if="contourDisplayArray.length > 0 || heatMapDisplayArray.length > 0">
+      <div class="algorithm-btn" v-if="contourDisplayArray.length > 0 ||
+        heatMapDisplayArray.length > 0">
         <div class="control-row">
           <!-- Contours -->
           <div class="control-group" v-if="contourDisplayArray.length > 0">
@@ -104,13 +105,6 @@
             </template>
           </a-dropdown>
         </a-button-group>
-
-        <!-- Delete Annotation (Removed as per new logic) -->
-        <!-- <a-tooltip v-if="activeTool === 'annotation'" title="Delete Selected" placement="top">
-          <a-button shape="circle" danger @click="deleteSelected">
-            <template #icon><DeleteOutlined /></template>
-          </a-button>
-        </a-tooltip> -->
       </div>
 
       <!-- Current Tool Indicator -->
@@ -309,8 +303,7 @@ watch(() => props.aiResult, (newVal) => {
 
 .ai-controls-overlay {
   position: absolute;
-  bottom: 80px;
-  /* Above bottom toolbar */
+  bottom: 30px;
   right: 10px;
   z-index: 5;
 }
