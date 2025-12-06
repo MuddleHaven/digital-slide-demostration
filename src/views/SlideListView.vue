@@ -1,135 +1,249 @@
 <template>
   <div style="padding: 20px;">
     <a-card :bordered="false" style="border-radius: 8px;">
-      <!-- Top Actions -->
-      <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
-        <div>
-          <!-- Batch Actions -->
-          <a-button type="primary" :disabled="selectedRowKeys.length === 0" @click="handleBatchSlice" style="margin-right: 10px;">
-            处理面板
-          </a-button>
-          <a-button danger :disabled="selectedRowKeys.length === 0" @click="batchDelete">
-            批量删除
-          </a-button>
-        </div>
-        <div>
-          <a-button type="primary" @click="uploadModalVisible = true">
-            <template #icon><UploadOutlined /></template>
-            上传切片
-          </a-button>
-        </div>
-      </div>
-
-      <!-- Filters -->
-      <a-row :gutter="16" style="margin-bottom: 20px;">
-        <a-col :span="4">
-          <a-select v-model:value="filters.result" :options="sliceResultOptions" placeholder="请选择辅助处理结果" style="width: 100%" allowClear />
-        </a-col>
-        <a-col :span="4">
-          <a-select v-model:value="filters.status" :options="sliceStatusOptions" placeholder="请选择处理状态" style="width: 100%" allowClear />
-        </a-col>
-        <a-col :span="4" v-if="userOptions.length > 0">
-          <a-select v-model:value="filters.userId" :options="userOptions" placeholder="请选择上传用户" style="width: 100%" allowClear />
-        </a-col>
-        <a-col :span="6">
-          <a-range-picker v-model:value="filters.uploadTime" style="width: 100%" />
-        </a-col>
-        <a-col :span="6">
-          <a-input v-model:value="filters.sliceNo" placeholder="搜索病理号" allowClear>
-            <template #suffix><SearchOutlined /></template>
-          </a-input>
-        </a-col>
-      </a-row>
-
-      <!-- Table -->
-      <a-table
-        :columns="columns"
-        :data-source="tableData"
-        :loading="loading"
-        :pagination="{
-          current: currentPage,
-          pageSize: pageSize,
-          total: totalSize,
-          showSizeChanger: true,
-          showQuickJumper: true,
-          showTotal: total => `共 ${total} 条`,
-          onChange: (page, size) => { currentPage = page; pageSize = size; fetchData(); },
-          onShowSizeChange: (current, size) => { currentPage = 1; pageSize = size; fetchData(); }
-        }"
-        :row-selection="{ 
-          selectedRowKeys: selectedRowKeys, 
-          onChange: keys => selectedRowKeys = keys,
-          getCheckboxProps: record => ({
-            disabled: !isSliceProcessed(record.status)
-          })
-        }"
-        row-key="id"
-      >
-        <template #bodyCell="{ column, record, index }">
-          <!-- Index -->
-          <template v-if="column.key === 'index'">
-            {{ index + 1 }}
-          </template>
-
-          <!-- Thumbnail -->
-          <template v-else-if="column.key === 'img'">
-            <div v-if="isSliceParseProcessing(record.status)" style="display: flex; justify-content: center;">
-              <LoadingOutlined style="font-size: 24px; color: #1890ff;" />
+      <a-tabs v-model:activeKey="activeTab">
+        <a-tab-pane key="result" tab="辅助诊断">
+          <!-- Top Actions -->
+          <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+            <div>
+              <!-- Batch Actions -->
+              <a-button type="primary" :disabled="selectedRowKeys.length === 0" @click="handleBatchSlice" style="margin-right: 10px;">
+                处理面板
+              </a-button>
+              <a-button danger :disabled="selectedRowKeys.length === 0" @click="batchDelete">
+                批量删除
+              </a-button>
             </div>
-            <a-popover v-else placement="right">
-              <template #content>
-                <img :src="record.img" style="max-width: 200px; max-height: 200px;" />
+            <div>
+              <a-button type="primary" @click="uploadModalVisible = true">
+                <template #icon><UploadOutlined /></template>
+                上传切片
+              </a-button>
+            </div>
+          </div>
+
+          <!-- Filters -->
+          <a-row :gutter="16" style="margin-bottom: 20px;">
+            <a-col :span="4">
+              <a-select v-model:value="filters.result" :options="sliceResultOptions" placeholder="请选择辅助处理结果" style="width: 100%" allowClear />
+            </a-col>
+            <a-col :span="4">
+              <a-select v-model:value="filters.status" :options="sliceStatusOptions" placeholder="请选择处理状态" style="width: 100%" allowClear />
+            </a-col>
+            <a-col :span="4" v-if="userOptions.length > 0">
+              <a-select v-model:value="filters.userId" :options="userOptions" placeholder="请选择上传用户" style="width: 100%" allowClear />
+            </a-col>
+            <a-col :span="6">
+              <a-range-picker v-model:value="filters.uploadTime" style="width: 100%" />
+            </a-col>
+            <a-col :span="6">
+              <a-input v-model:value="filters.sliceNo" placeholder="搜索病理号" allowClear>
+                <template #suffix><SearchOutlined /></template>
+              </a-input>
+            </a-col>
+          </a-row>
+
+          <!-- Table -->
+          <a-table
+            :columns="columns"
+            :data-source="tableData"
+            :loading="loading"
+            :pagination="{
+              current: currentPage,
+              pageSize: pageSize,
+              total: totalSize,
+              showSizeChanger: true,
+              showQuickJumper: true,
+              showTotal: total => `共 ${total} 条`,
+              onChange: (page, size) => { currentPage = page; pageSize = size; fetchData(); },
+              onShowSizeChange: (current, size) => { currentPage = 1; pageSize = size; fetchData(); }
+            }"
+            :row-selection="{ 
+              selectedRowKeys: selectedRowKeys, 
+              onChange: keys => selectedRowKeys = keys,
+              getCheckboxProps: record => ({
+                disabled: !isSliceProcessed(record.status)
+              })
+            }"
+            row-key="id"
+          >
+            <template #bodyCell="{ column, record, index }">
+              <!-- Index -->
+              <template v-if="column.key === 'index'">
+                {{ index + 1 }}
               </template>
-              <img :src="record.img" style="width: 40px; height: 40px; object-fit: cover; cursor: pointer;" />
-            </a-popover>
-          </template>
 
-          <!-- Status -->
-          <template v-else-if="column.key === 'status'">
-            <div v-if="record.status == SliceStatusEnum.PROCESSING || record.status == SliceStatusEnum.PARSING">
-               <FlowingProgressBar />
-               <span style="font-size: 12px;">{{ getSliceStatusText(record.status) }} <span v-if="record.percent">({{ record.percent }}%)</span></span>
-            </div>
-            <a-tag v-else :color="getStatusColor(record.status)">
-              {{ getSliceStatusText(record.status) }}
-            </a-tag>
-          </template>
+              <!-- Thumbnail -->
+              <template v-else-if="column.key === 'img'">
+                <div v-if="isSliceParseProcessing(record.status)" style="display: flex; justify-content: center;">
+                  <LoadingOutlined style="font-size: 24px; color: #1890ff;" />
+                </div>
+                <a-popover v-else placement="right">
+                  <template #content>
+                    <img :src="record.img" style="max-width: 200px; max-height: 200px;" />
+                  </template>
+                  <img :src="record.img" style="width: 40px; height: 40px; object-fit: cover; cursor: pointer;" />
+                </a-popover>
+              </template>
 
-          <!-- Result -->
-           <template v-else-if="column.key === 'result'">
-             <span v-if="record.status == SliceStatusEnum.PROCESSING">-</span>
-             <span v-else>{{ record.result || '-' }}</span>
-           </template>
+              <!-- Status -->
+              <template v-else-if="column.key === 'status'">
+                <div v-if="record.status == SliceStatusEnum.PROCESSING || record.status == SliceStatusEnum.PARSING">
+                  <FlowingProgressBar />
+                  <span style="font-size: 12px;">{{ getSliceStatusText(record.status) }} <span v-if="record.percent">({{ record.percent }}%)</span></span>
+                </div>
+                <a-tag v-else :color="getStatusColor(record.status)">
+                  {{ getSliceStatusText(record.status) }}
+                </a-tag>
+              </template>
 
-          <!-- Operations -->
-          <template v-else-if="column.key === 'operation'">
-            <a-space>
-              <a-tooltip title="AI分析/复核">
-                <a-button type="text" @click="AIDetect(record.status, record.id)">
-                  <template #icon><FundProjectionScreenOutlined /></template>
-                </a-button>
-              </a-tooltip>
-              <a-tooltip title="查看详情" v-if="isSliceProcessed(record.status)">
-                 <a-button type="text" @click="checkSliceProcessResult(record)">
-                   <template #icon><EyeOutlined /></template>
-                 </a-button>
-              </a-tooltip>
-              <a-popconfirm title="确定删除吗？" @confirm="confirmDelete(record.id)">
-                <a-button type="text" danger>
-                  <template #icon><DeleteOutlined /></template>
-                </a-button>
-              </a-popconfirm>
-              <a-tooltip title="重新上传" v-if="isSliceInFailureState(record.status)">
-                 <a-popconfirm title="确定重新上传吗？" @confirm="handleReupload(record.id)">
-                    <a-button type="text">
-                      <template #icon><ReloadOutlined /></template>
+              <!-- Result -->
+              <template v-else-if="column.key === 'result'">
+                <span v-if="record.status == SliceStatusEnum.PROCESSING">-</span>
+                <span v-else>{{ record.result || '-' }}</span>
+              </template>
+
+              <!-- Operations -->
+              <template v-else-if="column.key === 'operation'">
+                <a-space>
+                  <a-tooltip title="AI分析/复核">
+                    <a-button type="text" @click="AIDetect(record.status, record.id)">
+                      <template #icon><FundProjectionScreenOutlined /></template>
                     </a-button>
-                 </a-popconfirm>
-              </a-tooltip>
-            </a-space>
-          </template>
-        </template>
-      </a-table>
+                  </a-tooltip>
+                  <a-tooltip title="查看详情" v-if="isSliceProcessed(record.status)">
+                    <a-button type="text" @click="checkSliceProcessResult(record)">
+                      <template #icon><EyeOutlined /></template>
+                    </a-button>
+                  </a-tooltip>
+                  <a-popconfirm title="确定删除吗？" @confirm="confirmDelete(record.id)">
+                    <a-button type="text" danger>
+                      <template #icon><DeleteOutlined /></template>
+                    </a-button>
+                  </a-popconfirm>
+                  <a-tooltip title="重新上传" v-if="isSliceInFailureState(record.status)">
+                    <a-popconfirm title="确定重新上传吗？" @confirm="handleReupload(record.id)">
+                        <a-button type="text">
+                          <template #icon><ReloadOutlined /></template>
+                        </a-button>
+                    </a-popconfirm>
+                  </a-tooltip>
+                </a-space>
+              </template>
+            </template>
+          </a-table>
+        </a-tab-pane>
+        
+        <a-tab-pane key="quality" tab="质控评价">
+          <!-- Quality Actions -->
+          <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+            <div>
+              <a-button type="primary" :disabled="qSelectedRowKeys.length === 0" @click="qHandleBatchSlice" style="margin-right: 10px;">
+                质控面板
+              </a-button>
+              <a-button danger :disabled="qSelectedRowKeys.length === 0" @click="qBatchDelete">
+                批量删除
+              </a-button>
+            </div>
+            <div>
+              <a-button type="primary" @click="uploadModalVisible = true">
+                <template #icon><UploadOutlined /></template>
+                上传切片
+              </a-button>
+            </div>
+          </div>
+
+          <!-- Quality Filters -->
+           <a-row :gutter="16" style="margin-bottom: 20px;">
+            <a-col :span="4">
+              <!-- Reusing status filter for now, maybe quality status? -->
+              <a-select v-model:value="qFilters.status" :options="sliceStatusOptions" placeholder="请选择处理状态" style="width: 100%" allowClear />
+            </a-col>
+            <a-col :span="4" v-if="qUserOptions.length > 0">
+              <a-select v-model:value="qFilters.userId" :options="qUserOptions" placeholder="请选择上传用户" style="width: 100%" allowClear />
+            </a-col>
+            <a-col :span="6">
+              <a-range-picker v-model:value="qFilters.uploadTime" style="width: 100%" />
+            </a-col>
+            <a-col :span="6">
+              <a-input v-model:value="qFilters.sliceNo" placeholder="搜索病理号" allowClear>
+                <template #suffix><SearchOutlined /></template>
+              </a-input>
+            </a-col>
+          </a-row>
+
+          <!-- Quality Table -->
+          <a-table
+            :columns="qualityColumns"
+            :data-source="qTableData"
+            :loading="qLoading"
+            :pagination="{
+              current: qCurrentPage,
+              pageSize: qPageSize,
+              total: qTotalSize,
+              showSizeChanger: true,
+              showQuickJumper: true,
+              showTotal: total => `共 ${total} 条`,
+              onChange: (page, size) => { qCurrentPage = page; qPageSize = size; qFetchData(); },
+              onShowSizeChange: (current, size) => { qCurrentPage = 1; qPageSize = size; qFetchData(); }
+            }"
+            :row-selection="{ 
+              selectedRowKeys: qSelectedRowKeys, 
+              onChange: keys => qSelectedRowKeys = keys,
+              getCheckboxProps: record => ({
+                disabled: !isSliceProcessed(record.status)
+              })
+            }"
+            row-key="id"
+          >
+             <template #bodyCell="{ column, record, index }">
+              <template v-if="column.key === 'index'">{{ index + 1 }}</template>
+              
+              <template v-else-if="column.key === 'img'">
+                <div v-if="isSliceParseProcessing(record.status)" style="display: flex; justify-content: center;">
+                  <LoadingOutlined style="font-size: 24px; color: #1890ff;" />
+                </div>
+                <a-popover v-else placement="right">
+                  <template #content>
+                    <img :src="record.img" style="max-width: 200px; max-height: 200px;" />
+                  </template>
+                  <img :src="record.img" style="width: 40px; height: 40px; object-fit: cover; cursor: pointer;" />
+                </a-popover>
+              </template>
+
+              <template v-else-if="column.key === 'status'">
+                 <div v-if="record.status == SliceStatusEnum.PROCESSING || record.status == SliceStatusEnum.PARSING">
+                   <FlowingProgressBar />
+                   <span style="font-size: 12px;">{{ getSliceStatusText(record.status) }}</span>
+                 </div>
+                 <a-tag v-else :color="getStatusColor(record.status)">
+                   {{ getSliceStatusText(record.status) }}
+                 </a-tag>
+              </template>
+
+              <template v-else-if="column.key === 'quality'">
+                <span>{{ record.quality || '-' }}</span>
+              </template>
+
+              <template v-else-if="column.key === 'operation'">
+                 <a-space>
+                   <!-- Quality Panel Action -->
+                   <a-tooltip title="查看质控详情">
+                     <a-button type="text" @click="qHandleSingleSlice(record)">
+                       <template #icon><EyeOutlined /></template>
+                     </a-button>
+                   </a-tooltip>
+                   <a-popconfirm title="确定删除吗？" @confirm="qConfirmDelete(record.id)">
+                     <a-button type="text" danger>
+                       <template #icon><DeleteOutlined /></template>
+                     </a-button>
+                   </a-popconfirm>
+                 </a-space>
+              </template>
+             </template>
+          </a-table>
+        </a-tab-pane>
+      </a-tabs>
     </a-card>
 
     <!-- Upload Modal -->
@@ -198,12 +312,14 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'; // Import ref
 import { 
   UploadOutlined, SearchOutlined, DeleteOutlined, 
   FundProjectionScreenOutlined, EyeOutlined, ReloadOutlined, 
   InboxOutlined, LoadingOutlined 
 } from '@ant-design/icons-vue';
 import { useSlideList } from '@/composables/use-slide-list';
+import { useSlideQualityList } from '@/composables/use-slide-quality-list'; // Import Quality List
 import { useUpload } from '@/composables/use-upload';
 import { 
   SliceStatusEnum, 
@@ -216,6 +332,8 @@ import {
 } from '@/common/sliceTypes.js';
 import FlowingProgressBar from '@/components/FlowingProgressBar.vue';
 import ProcessResult from '@/components/ProcessResult.vue';
+
+const activeTab = ref('result');
 
 const {
   tableData,
@@ -237,6 +355,23 @@ const {
   checkSliceProcessResult
 } = useSlideList();
 
+// Use Slide Quality List
+const {
+  tableData: qTableData,
+  loading: qLoading,
+  currentPage: qCurrentPage,
+  pageSize: qPageSize,
+  totalSize: qTotalSize,
+  filters: qFilters,
+  userOptions: qUserOptions,
+  selectedRowKeys: qSelectedRowKeys,
+  fetchData: qFetchData,
+  confirmDelete: qConfirmDelete,
+  batchDelete: qBatchDelete,
+  handleBatchSlice: qHandleBatchSlice,
+  handleSingleSlice: qHandleSingleSlice
+} = useSlideQualityList();
+
 const {
   uploadModalVisible,
   isUploading,
@@ -247,7 +382,10 @@ const {
   uploadFiles,
   cancelAllPendingUploads,
   handleReupload
-} = useUpload(fetchData);
+} = useUpload(() => {
+  if (activeTab.value === 'result') fetchData();
+  else qFetchData();
+});
 
 const columns = [
   { title: '序号', key: 'index', width: 60, align: 'center' },
@@ -262,6 +400,24 @@ const columns = [
   { title: '复核时间', dataIndex: 'saveResultTime', key: 'saveResultTime', width: 150, align: 'center' },
   { title: '操作', key: 'operation', width: 180, align: 'center' }
 ];
+
+const qualityColumns = [
+  { title: '序号', key: 'index', width: 60, align: 'center' },
+  { title: '病理号', dataIndex: 'no', key: 'no', width: 140, align: 'center' },
+  { title: '缩略图', key: 'img', width: 80, align: 'center' },
+  { title: '上传用户', dataIndex: 'uploadUserRealName', key: 'uploadUserRealName', width: 100, align: 'center' },
+  { title: '处理进度', key: 'status', width: 120, align: 'center' },
+  { title: '切片质量', key: 'quality', width: 100, align: 'center' },
+  { title: '扫描倍数', dataIndex: 'focus', key: 'focus', width: 80, align: 'center', customRender: ({text}) => text ? text + '倍' : '-' },
+  { title: '上传时间', dataIndex: 'uploadTime', key: 'uploadTime', width: 150, align: 'center' },
+  { title: '复核时间', dataIndex: 'saveResultTime', key: 'saveResultTime', width: 150, align: 'center' },
+  { title: '操作', key: 'operation', width: 180, align: 'center' }
+];
+
+// Initial Fetch for Quality Tab
+onMounted(() => {
+  qFetchData();
+});
 
 const getStatusColor = (status) => {
   if (status === SliceStatusEnum.PROCESS_SUCCESS) return 'orange';

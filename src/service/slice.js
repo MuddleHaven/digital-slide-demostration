@@ -1,4 +1,5 @@
 import request from './request.js'
+import requestQuality from './request-quality.js'
 
 export function getProcessInfo() { //获取任务数量
   return request({
@@ -67,6 +68,14 @@ export function setSliceStatusChulizhong(sliceIds) { //修改切片状态为“�
 
 export function querySlideData(params) { //条件查询切片列表
   return request({
+    url: '/slice/querySlideData',
+    method: 'get',
+    params: params
+  })
+}
+
+export function queryQualitySlideData(params) { //条件查询质控切片列表
+  return requestQuality({
     url: '/slice/querySlideData',
     method: 'get',
     params: params
@@ -233,72 +242,16 @@ export function getHeatmapCurve(sliceId) {
     }
   })
 }
-
-export function getHeatmapResult(sliceId) { //获取热力图数据
-  // return new Promise((resolve, reject) => {
-  //   fetch(`/static/${sliceId}.json`)
-  //     .then(res => {
-  //       if (!res.ok) {
-  //         throw new Error('Network response was not ok');
-  //       }
-  //       return res.json();
-  //     })
-  //     .then(data => {
-  //       const heatMapData = data.data.heatmapData;
-  //       const other_heatmapData = data.data.other_heatmapData;
-  //       const jsonData = {
-  //         code: 200,
-  //         data: {
-  //           data: heatMapData,
-  //           cols: data.data.heatmapCols,
-  //           rows: data.data.heatmapRows,
-  //           otherData: other_heatmapData,
-  //         },
-  //         message: "success"
-  //       }
-  //       resolve(jsonData);
-  //       // resolve(data);
-  //     })
-  //     .catch(err => {
-  //       reject(err);
-  //     });
-  // })
-
+ //获取热力图数据
+export function getHeatmapResult(sliceId) {
   return request({
     url: '/slice/getHeatmapResult',
     method: 'get',
     params: { sliceId }
   })
 }
-
-export function getCurveResult(sliceId) { //获取轮廓线数据
-  // return new Promise((resolve, reject) => {
-  //   fetch(`/static/${sliceId}.json`)
-  //     .then(res => {
-  //       if (!res.ok) {
-  //         throw new Error('Network response was not ok');
-  //       }
-  //       return res.json();
-  //     })
-  //     .then(data => {
-  //       const curve_infos = data.data.curve_infos;
-  //       const jsonData = {
-  //         code: 200,
-  //         data: {
-  //           curveCols: data.data.curveCols,
-  //           curveRows: data.data.curveRows,
-  //           pointList: curve_infos.point_list,
-  //           ...curve_infos,
-  //         },
-  //         message: "success"
-  //       }
-  //       resolve(jsonData);
-  //     })
-  //     .catch(err => {
-  //       reject(err);
-  //     });
-  // })
-
+// 获取轮廓线数据
+export function getCurveResult(sliceId) {
   return request({
     url: '/slice/getCurveResult',
     method: 'get',
@@ -379,6 +332,15 @@ export function getResult(sliceId) { //获取诊断报告
   })
 }
 
+/// 获取AI处理切片结果
+export function getAIResult(sliceId) {
+  return request({
+    url: '/diagnosis/getAIResult',
+    method: 'get',
+    params: { sliceId }
+  })
+}
+
 export function getPrintReport(sliceId) { //获取打印时候的预览数据
   return request({
     url: '/diagnosis/getPrintReport',
@@ -397,23 +359,33 @@ export function exportPDF(data) { //导出为pdf
 
 //关于质控评价:
 
-export function updateQCResult(params) { //更新质控评价[可能需要修改]
-  return request({
+export function updateQCResult(params) { //更新质控评价
+  return requestQuality({
     url: '/quality/updateResult',
     method: 'post',
     params: params
   })
 }
-
-export function getQCResult(sliceId) { //获取质控评价
-  return request({
-    url: '/quality/getResult',
+/// 获取质控评价 (手动/已保存)
+export function getQCResult(sliceId) { 
+  return requestQuality({
+    url: '/qualityCheck/getQualityCheck',
     method: 'get',
-    params: { sliceId }
+    params: { sliceId, type: 2 }
   })
 }
 
-export function getQCPrintReport(sliceId) { //获取打印时候的预览数据
+/// 获取AI处理质控切片结果
+export function getAIQCResult(sliceId) {
+  return requestQuality({
+    url: '/qualityCheck/getQualityCheck',
+    method: 'get',
+    params: { sliceId, type: 1 }
+  })
+}
+
+//获取打印时候的预览数据
+export function getQCPrintReport(sliceId) { 
   return request({
     url: '/quality/getPrintReport',
     method: 'get',
@@ -506,21 +478,5 @@ export function AIAnalyze(sliceIds) { //AI处理切片
     url: '/slice/AIAnalysis',
     method: 'post',
     data: Array.isArray(sliceIds) ? sliceIds : [sliceIds]
-  })
-}
-
-export function getAIResult(sliceId) { //AI处理切片
-  return request({
-    url: '/diagnosis/getAIResult',
-    method: 'get',
-    params: { sliceId }
-  })
-}
-
-export function getAIQCResult(sliceId) { //AI处理切片
-  return request({
-    url: '/quality/getAIResult',
-    method: 'get',
-    params: { sliceId }
   })
 }

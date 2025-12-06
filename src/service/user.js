@@ -1,4 +1,17 @@
 import request from './request.js'
+import requestQuality from './request-quality.js'
+
+export function loginQuality(username, password) { //登录质控服务
+  return requestQuality({
+    url: '/user/login',
+    method: 'get',
+    params: { username, password },
+    timeout: 3000,
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+}
 
 export function login(username, password) { //登录
   return request({

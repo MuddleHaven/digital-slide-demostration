@@ -1,12 +1,12 @@
 <template>
   <div class="relative w-screen h-screen overflow-hidden bg-black">
     <!-- Openseadragon Viewer (Full Screen) -->
-    <div class="absolute top-0 left-0 w-full h-full z-[1]">
+    <div class="absolute top-0 left-0 w-full h-full z-1">
       <OpenseadragonViewer :slide-id="currentSlide?.id" :ai-result="resultData.aiResult" :detail="currentSlide" />
     </div>
 
     <!-- Left Sidebar: Floating Slide List -->
-    <div class="absolute top-20 left-5 bottom-5 z-100 pointer-events-none">
+    <div class="absolute top-5 left-5 bottom-5 z-100 pointer-events-none">
       <div class="pointer-events-auto h-full">
         <SlideListSide :slices="slideList" :active-index="currentIndex" :pannel="pannel" :options="options"
           :collapsed="leftCollapsed" @select-slice="selectSlide" @toggle-collapse="toggleLeft"
@@ -27,8 +27,23 @@
              @save-and-view="handleSave"
              @next-slice="handleNext"
           />
+          <QualityPanel
+            v-else
+            :quality="qualityData.quality"
+            :ai-quality="qualityData.aiQuality"
+            :qualities="[{label:'合格', value:'0'}, {label:'不合格', value:'10'}]"
+            :ranse-errors="qualityData.ranseErrors"
+            :qiepian-errors="qualityData.qiepianErrors"
+            :saomiao-errors="qualityData.saomiaoErrors"
+            :label="currentSlide?.no || ''"
+            @change-quality="(val) => qualityData.quality = val"
+            @save-and-view="handleSaveQuality"
+            @next-slice="handleNext"
+            @toggle-collapse="toggleRight"
+            @update-quality-areas="handleQualityAreasUpdate"
+          />
         </div>
-        <div v-if="rightCollapsed" class="absolute right-5 top-1/2 -translate-y-1/2 z-[101] pointer-events-auto">
+        <div v-if="rightCollapsed" class="absolute right-5 top-1/2 -translate-y-1/2 z-101 pointer-events-auto">
             <div class="w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center cursor-pointer text-gray-600 hover:text-blue-500" @click="toggleRight">
               <LeftOutlined />
             </div>
@@ -50,6 +65,7 @@ import { AllPartConditions, SlicePart } from '@/common/options.js';
 // Components
 import SlideListSide from '@/components/slide/SlideListSide.vue';
 import ResultPanel from '@/components/slide/ResultPanel.vue';
+import QualityPanel from '@/components/slide/QualityPanel.vue';
 import OpenseadragonViewer from '@/components/OpenseadragonViewer.vue';
 
 // Router
@@ -63,7 +79,7 @@ const {
 } = useSlideDetail();
 
 const { resultData, loadResult } = useSlideResult();
-const { loadQuality } = useSlideQuality();
+const { qualityData, loadQuality, saveQuality, loadAIQualityData, updateQualityAreas } = useSlideQuality();
 
 const pannel = ref("整体结果");
 const rightCollapsed = ref(false);
@@ -113,6 +129,14 @@ const handleSave = () => {
   console.log('Save and View clicked');
 };
 
+const handleSaveQuality = () => {
+  saveQuality(currentSlide.value.id, qualityData.value);
+};
+
+const handleQualityAreasUpdate = (areas) => {
+  updateQualityAreas({ type: 'manual', areas }); // Pass appropriate type if needed, or adjust composable
+};
+
 const handleNext = () => {
   // Implement next slice logic
   // Assuming sliceList and currentIndex are available
@@ -126,6 +150,7 @@ watch(currentSlide, (newVal) => {
   if (newVal) {
     loadResult(newVal.id, newVal.collectionArea);
     loadQuality(newVal.id);
+    loadAIQualityData(newVal.id);
   }
 });
 

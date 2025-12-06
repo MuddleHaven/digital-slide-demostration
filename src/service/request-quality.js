@@ -4,49 +4,22 @@ import { useRouter } from "vue-router";
 
 // request config
 const RequestConfig = {
-  BASE_URL_SERVER: import.meta.env.VITE_BASE_URL,
+  BASE_URL_SERVER: import.meta.env.VITE_QUALITY_BASE_URL,
   // 设置超时时间为1min
   TIMEOUT: 60 * 1000,
 };
 
 let baseURL = RequestConfig.BASE_URL_SERVER;
 
-// 动态加载配置文件
-const loadConfig = async () => {
-  try {
-    const response = await fetch('/config.json');
-    const data = await response.json();
-    baseURL = data.backendUrl;
-  } catch (error) {
-    message.error('Failed to load config: ' + error.message);
-  }
-};
-
-// 确保配置加载完成
-const ensureConfigLoaded = async () => {
-  // debug 模式下不加载配置文件
-  if (import.meta.env.DEV) {
-    return;
-  }
-  if (!baseURL || baseURL === RequestConfig.BASE_URL_LOCAL) {
-    await loadConfig();
-  }
-};
-
 const service = axios.create({
   // 设置超时时间为20min
   timeout: 20 * 60 * 1000, 
   baseURL: baseURL
-  // headers: {
-  //   "Content-Type": "application/json",
-  // },
 });
 
 // 请求拦截器
 service.interceptors.request.use(async (config) => {
-  await ensureConfigLoaded(); // 确保配置加载完成
-
-  const token = localStorage.getItem('token'); // 获取token
+  const token = localStorage.getItem('qualityToken'); // 获取 qualityToken
   if (token) {
     config.headers['Authorization'] = 'Bearer ' + token;
   }

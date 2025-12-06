@@ -46,13 +46,35 @@ const login = async () => {
   formRef.value.validate()
     .then(async () => {
       loading.value = true
-      const loginResponse = await userAPI.login(formState.username, formState.password);
-      loading.value = false
-      if (loginResponse.code == 200) {
-        localStorage.setItem('token', loginResponse.data.token);
-        localStorage.setItem('role', loginResponse.data.roleName);
-        message.success('登录成功')
-        router.push('/list');
+      try {
+        // 并行登录两个服务
+        const [loginResponse, qualityLoginResponse] = await Promise.all([
+          userAPI.login(formState.username, formState.password),
+          userAPI.loginQuality(formState.username, formState.password).catch(e => ({ code: 500, msg: 'Quality login failed' })) // Handle quality login failure gracefully? Or block?
+        ]);
+
+        loading.value = false
+        
+        // 只要主服务登录成功，就允许进入，但提示质控服务状态
+        if (loginResponse.code == 200) {
+          localStorage.setItem('token', loginResponse.data.token);
+          localStorage.setItem('role', loginResponse.data.roleName);
+
+          if (qualityLoginResponse && qualityLoginResponse.code == 200) {
+             localStorage.setItem('qualityToken', qualityLoginResponse.data.token);
+             message.success('登录成功');
+          } else {
+             message.warning('主服务登录成功，但质控服务连接失败，部分功能可能受限');
+          }
+          
+          router.push('/list');
+        } else {
+          message.error(loginResponse.msg || '登录失败');
+        }
+      } catch (error) {
+        loading.value = false;
+        message.error('登录请求异常');
+        console.error(error);
       }
     })
     .catch(() => {
