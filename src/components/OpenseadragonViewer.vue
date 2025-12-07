@@ -144,11 +144,16 @@ const props = defineProps({
   aiResult: {
     type: Object,
     default: null
+  },
+  isQuality: {
+    type: Boolean,
+    default: false
   }
 });
 
 const containerId = 'openseadragon-viewer';
 const { viewer, initViewer, openSlide } = useOpenseadragon(containerId);
+import { getSingleSliceData, getQualitySingleSliceData } from '@/service/slice.js';
 
 // Konva Integration
 const { stage, layer, initKonva } = useOsdKonva(viewer, 'konva-overlay-container');
@@ -222,8 +227,10 @@ onMounted(() => {
   initMeasurement();
 
   if (props.slideId) {
-    openSlide(props.slideId);
-    loadAnnotations(props.slideId);
+    openSlide(props.slideId, props.isQuality ? getQualitySingleSliceData : getSingleSliceData);
+    if (!props.isQuality) {
+      loadAnnotations(props.slideId);
+    }
     if (props.aiResult) {
       initAiVisualization(props.slideId, props.aiResult);
     }
@@ -233,8 +240,10 @@ onMounted(() => {
 // Watch for slide ID changes to load new slide
 watch(() => props.slideId, (newId) => {
   if (newId) {
-    openSlide(newId);
-    loadAnnotations(newId);
+    openSlide(newId, props.isQuality ? getQualitySingleSliceData : getSingleSliceData);
+    if (!props.isQuality) {
+      loadAnnotations(newId);
+    }
     // Re-init AI logic if aiResult exists
     if (props.aiResult) {
       initAiVisualization(newId, props.aiResult);

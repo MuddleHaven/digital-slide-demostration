@@ -20,7 +20,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, defineProps, defineEmits } from 'vue';
 import CheckBoxWithTitle from '@/components/CheckBoxWithTitle.vue';
 
 const props = defineProps({

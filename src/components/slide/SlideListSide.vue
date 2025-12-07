@@ -57,7 +57,7 @@
 </template>
 
 <script setup>
-import { computed, watch } from 'vue';
+import { computed, watch, defineProps } from 'vue';
 import { LeftOutlined, RightOutlined } from '@ant-design/icons-vue';
 
 const props = defineProps({

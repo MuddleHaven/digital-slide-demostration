@@ -15,7 +15,7 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue';
+import { ref, watch, computed, defineProps, defineEmits } from 'vue';
 import activeImgSrc from '../assets/icons/checkout-active.png';
 import noneImgSrc from '../assets/icons/checkout-none.png';
 import { message } from 'ant-design-vue';

@@ -82,7 +82,7 @@
 </template>
 
 <script setup>
-import { computed, ref, inject, watch, onMounted } from 'vue';
+import { computed, ref, inject, watch, onMounted, defineProps } from 'vue';
 import { RightOutlined } from '@ant-design/icons-vue';
 import CheckBoxWithTitle from '@/components/CheckBoxWithTitle.vue';
 import CheckBox from '@/components/CheckBox.vue';

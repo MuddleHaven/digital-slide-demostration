@@ -38,8 +38,9 @@ export const throttle = (func, wait) => {
  * Get image prefix
  * @returns {string} imagePrefix
  */
-export const getImagePrefix = () => {
-  return `${import.meta.env.VITE_BASE_URL}/app_data`;
+export const getImagePrefix = (isQuality = false) => {
+  const baseUrl = isQuality ? import.meta.env.VITE_QUALITY_BASE_URL : import.meta.env.VITE_BASE_URL;
+  return `${baseUrl}/app_data`;
 }
 
 /**

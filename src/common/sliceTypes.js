@@ -37,6 +37,32 @@ export const sliceStatusEnumDic = {
   [SliceStatusEnum.REVIEWED]: '已复核',
 };
 
+// Quality Check Status Enum
+export const QualityCheckStatusEnum = Object.freeze({
+  PENDING: 0,
+  PROCESSING: 1,
+  PROCESSED: 2,
+  FAILED: 3
+});
+
+export const qualityCheckStatusEnumDic = {
+  [QualityCheckStatusEnum.PENDING]: '待处理',
+  [QualityCheckStatusEnum.PROCESSING]: '处理中',
+  [QualityCheckStatusEnum.PROCESSED]: '已处理',
+  [QualityCheckStatusEnum.FAILED]: '处理失败',
+};
+
+export function getQualityCheckStatusText(statusCode) {
+  return qualityCheckStatusEnumDic[statusCode] || '未知状态';
+}
+
+export const qualityCheckStatusOptions = [
+  { value: QualityCheckStatusEnum.PENDING, label: '待处理' },
+  { value: QualityCheckStatusEnum.PROCESSING, label: '处理中' },
+  { value: QualityCheckStatusEnum.PROCESSED, label: '已处理' },
+  { value: QualityCheckStatusEnum.FAILED, label: '处理失败' }
+];
+
 // slice quality options
 export const sliceQualityOptions = [
   { value: '优', label: '优', },

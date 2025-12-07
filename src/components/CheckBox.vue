@@ -13,7 +13,7 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue';
+import { computed, ref, watch, defineProps, defineEmits } from 'vue';
 import { message } from 'ant-design-vue';
 import activeImgSrc from '../assets/icons/checkout-active.png';
 import noneImgSrc from '../assets/icons/checkout-none.png';

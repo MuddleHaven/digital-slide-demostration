@@ -157,7 +157,7 @@
            <a-row :gutter="16" style="margin-bottom: 20px;">
             <a-col :span="4">
               <!-- Reusing status filter for now, maybe quality status? -->
-              <a-select v-model:value="qFilters.status" :options="sliceStatusOptions" placeholder="请选择处理状态" style="width: 100%" allowClear />
+              <a-select v-model:value="qFilters.status" :options="qualityCheckStatusOptions" placeholder="请选择处理状态" style="width: 100%" allowClear />
             </a-col>
             <a-col :span="4" v-if="qUserOptions.length > 0">
               <a-select v-model:value="qFilters.userId" :options="qUserOptions" placeholder="请选择上传用户" style="width: 100%" allowClear />
@@ -191,7 +191,7 @@
               selectedRowKeys: qSelectedRowKeys, 
               onChange: keys => qSelectedRowKeys = keys,
               getCheckboxProps: record => ({
-                disabled: !isSliceProcessed(record.status)
+                disabled: record.qualityCheckStatus !== QualityCheckStatusEnum.PROCESSED
               })
             }"
             row-key="id"
@@ -212,12 +212,12 @@
               </template>
 
               <template v-else-if="column.key === 'status'">
-                 <div v-if="record.status == SliceStatusEnum.PROCESSING || record.status == SliceStatusEnum.PARSING">
-                   <FlowingProgressBar />
-                   <span style="font-size: 12px;">{{ getSliceStatusText(record.status) }}</span>
+                 <div v-if="record.qualityCheckStatus === QualityCheckStatusEnum.PROCESSING">
+                   <LoadingOutlined />
+                   <span style="font-size: 12px; margin-left: 8px;">{{ getQualityCheckStatusText(record.qualityCheckStatus) }}</span>
                  </div>
-                 <a-tag v-else :color="getStatusColor(record.status)">
-                   {{ getSliceStatusText(record.status) }}
+                 <a-tag v-else :color="getQualityStatusColor(record.qualityCheckStatus)">
+                   {{ getQualityCheckStatusText(record.qualityCheckStatus) }}
                  </a-tag>
               </template>
 
@@ -228,7 +228,7 @@
               <template v-else-if="column.key === 'operation'">
                  <a-space>
                    <!-- Quality Panel Action -->
-                   <a-tooltip title="查看质控详情">
+                   <a-tooltip title="查看质控详情" v-if="record.qualityCheckStatus === QualityCheckStatusEnum.PROCESSED">
                      <a-button type="text" @click="qHandleSingleSlice(record)">
                        <template #icon><EyeOutlined /></template>
                      </a-button>
@@ -322,6 +322,9 @@ import { useSlideList } from '@/composables/use-slide-list';
 import { useSlideQualityList } from '@/composables/use-slide-quality-list'; // Import Quality List
 import { useUpload } from '@/composables/use-upload';
 import { 
+  QualityCheckStatusEnum,
+  qualityCheckStatusOptions,
+  getQualityCheckStatusText,
   SliceStatusEnum, 
   sliceResultOptions, 
   sliceStatusOptions, 
@@ -423,6 +426,13 @@ const getStatusColor = (status) => {
   if (status === SliceStatusEnum.PROCESS_SUCCESS) return 'orange';
   if (status === SliceStatusEnum.REVIEWED) return 'green';
   if (isSliceInFailureState(status)) return 'red';
+  return 'default';
+};
+
+const getQualityStatusColor = (status) => {
+  if (status === QualityCheckStatusEnum.PROCESSED) return 'green';
+  if (status === QualityCheckStatusEnum.PROCESSING) return 'blue';
+  if (status === QualityCheckStatusEnum.FAILED) return 'red';
   return 'default';
 };
 

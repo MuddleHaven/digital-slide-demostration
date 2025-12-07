@@ -58,6 +58,14 @@ export function deleteSlices(sliceIds) { //删除切片
   })
 }
 
+export function deleteQualitySlices(sliceIds) { //删除质控切片
+  return requestQuality({
+    url: '/slice/deleteSlices',
+    method: 'post',
+    data: Array.isArray(sliceIds) ? sliceIds : [sliceIds]
+  })
+}
+
 export function setSliceStatusChulizhong(sliceIds) { //修改切片状态为“处理中”
   return request({
     url: '/slice/setSliceStatusChulizhong',
@@ -112,6 +120,14 @@ export function getUploadProgress() { //查询上传进度
 
 export function getSingleSliceData(sliceId) { //根据id获取切片数据
   return request({
+    url: '/slice/getSingleSliceData',
+    method: 'get',
+    params: { sliceId }
+  })
+}
+
+export function getQualitySingleSliceData(sliceId) { //根据id获取质控切片数据
+  return requestQuality({
     url: '/slice/getSingleSliceData',
     method: 'get',
     params: { sliceId }

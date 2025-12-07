@@ -72,7 +72,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, defineProps } from 'vue';
 import { getCheckoutOptionLabel, SlicePart } from '@/common/options';
 import { colonConditionKeys } from '@/common/options-colon'
 import { lungConditionKeys } from '@/common/options-lung'

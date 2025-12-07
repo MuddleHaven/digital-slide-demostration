@@ -61,7 +61,7 @@ export function useOpenseadragon(containerId) {
   };
 
   // Open Slide
-  const openSlide = async (slideId) => {
+  const openSlide = async (slideId, fetcher = sliceAPI.getSingleSliceData) => {
     if (!viewer.value) {
       console.warn("Viewer not initialized");
       return;
@@ -71,7 +71,7 @@ export function useOpenseadragon(containerId) {
     try {
       // Fetch detailed slide data for DZI/DeepZoom
       // The API returns data structure needed for OSD
-      const res = await sliceAPI.getSingleSliceData(slideId);
+      const res = await fetcher(slideId);
       const data = res.data;
 
       if (!data || !data.slice) {

@@ -17,6 +17,10 @@ const routes = [
     path: '/detail',
     component: () => import('@/views/SlideDetailView.vue'),
   },
+  {
+    path: '/quality-detail',
+    component: () => import('@/views/SlideQualityDetailView.vue'),
+  },
 ]
 
 

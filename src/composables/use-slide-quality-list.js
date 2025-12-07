@@ -104,7 +104,7 @@ export function useSlideQualityList() {
   // Delete
   const deleteSlice = async (ids) => {
     try {
-      const response = await sliceAPI.deleteSlices(ids);
+      const response = await sliceAPI.deleteQualitySlices(ids);
       if (response.code === 200) {
         message.success("删除成功");
         selectedRowKeys.value = [];
@@ -149,13 +149,13 @@ export function useSlideQualityList() {
     const selectedItems = tableData.value.filter(item => ids.includes(String(item.id)));
     sliceStore.setSlideListData(selectedItems);
 
-    router.push({ path: '/detail' });
+    router.push({ path: '/quality-detail' });
   };
 
   const handleSingleSlice = (record) => {
     sliceStore.setDetailIds([String(record.id)]);
     sliceStore.setSlideListData([record]);
-    router.push({ path: '/detail' });
+    router.push({ path: '/quality-detail' });
   };
 
   onMounted(() => {
