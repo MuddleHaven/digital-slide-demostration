@@ -41,6 +41,23 @@
         </div>
       </div>
     </div>
+    <!-- Signature Dialog -->
+    <SignatureDialog :visible="signatureDialogVisible" @update:visible="val => signatureDialogVisible = val" @success="handleSignatureSuccess" />
+
+    <!-- Report Dialog (Mask Result replacement) -->
+    <ReportDialog 
+      v-model:visible="reportVisible"
+      :slice-no="currentSlide?.no"
+      :upload-time="currentSlide?.uploadtime || currentSlide?.uploadTime"
+      :process-time="currentSlide?.processTime"
+      :conditions="resultData.conditions"
+      :advice="resultData.advice"
+      :slice-part="currentSlicePart"
+      :save-loading="saveLoading"
+      :export-loading="exportLoading"
+      @save="handleReportSave"
+      @download="handleReportDownload"
+    />
   </div>
 </template>
 
@@ -51,14 +68,25 @@ import { LeftOutlined, ArrowLeftOutlined } from '@ant-design/icons-vue';
 import { useSlideDetail } from '@/composables/use-slide-detail';
 import { useSlideResult } from '@/composables/use-slide-result';
 import { AllPartConditions, SlicePart } from '@/common/options.js';
+import * as userApi from '@/service/user.js';
+import * as sliceApi from '@/service/slice.js';
+import { message } from 'ant-design-vue';
 
 // Components
 import SlideListSide from '@/components/slide/SlideListSide.vue';
 import ResultPanel from '@/components/slide/ResultPanel.vue';
 import OpenseadragonViewer from '@/components/OpenseadragonViewer.vue';
+import SignatureDialog from '@/components/commons/SignatureDialog.vue';
+import ReportDialog from '@/components/slide/ReportDialog.vue';
 
 // Router
 const router = useRouter();
+
+// Refs
+const signatureDialogVisible = ref(false);
+const reportVisible = ref(false);
+const saveLoading = ref(false);
+const exportLoading = ref(false);
 
 // Composables
 const {
@@ -116,21 +144,82 @@ const goBack = () => {
   router.back();
 };
 
-const handleSave = () => {
+const handleSave = async () => {
   if (!currentSlide.value) return;
+
+  // Check for signature
+  try {
+    const res = await userApi.getElecNamePathAndDepartmentAndHospital();
+    if (res.data.path == null || res.data.path == '') {
+      message.info("请先上传个人签名");
+      signatureDialogVisible.value = true;
+      return;
+    }
+    
+    // If signature exists, open ReportDialog
+    reportVisible.value = true;
+    
+  } catch (error) {
+    console.error("Check signature failed", error);
+    message.error("无法验证签名信息");
+  }
+};
+
+const prepareSaveData = () => {
+  const data = {
+    "sliceId": currentSlide.value.id,
+    "recommendation": resultData.value.advice
+  };
   
-  const data = {};
-  // Map conditions to key-value pairs
   if (resultData.value.conditions) {
     resultData.value.conditions.forEach(item => {
       data[item.key] = item.value;
     });
   }
-  // Add recommendation/advice
-  data.recommendation = resultData.value.advice;
+  return data;
+};
+
+const handleReportSave = async () => {
+  if (!currentSlide.value) return;
   
-  // Call save service
-  saveResult(currentSlide.value.id, data);
+  try {
+    saveLoading.value = true;
+    const data = prepareSaveData();
+    await saveResult(currentSlide.value.id, data);
+    reportVisible.value = false;
+  } catch (error) {
+    // Error handled in saveResult or here
+  } finally {
+    saveLoading.value = false;
+  }
+};
+
+const handleReportDownload = async () => {
+  if (!currentSlide.value) return;
+
+  try {
+    exportLoading.value = true;
+    message.info("正在导出为pdf，请稍等...");
+    const data = prepareSaveData();
+    // Add id for export if needed (usually diagnosis id)
+    // If diagnosisId is not available, backend might create new or handle logic
+    // We assume exportPDF takes same structure
+    const res = await sliceApi.exportPDF(data);
+    if (res.code === 200 && res.data) {
+      window.open(res.data, '_blank');
+    } else {
+      message.error(res.msg || "导出失败");
+    }
+  } catch (error) {
+    message.error("导出PDF失败：" + (error.message || "未知错误"));
+  } finally {
+    exportLoading.value = false;
+  }
+};
+
+const handleSignatureSuccess = () => {
+  // After signature upload success, try opening mask again
+  handleSave();
 };
 
 const handleNext = () => {

@@ -6,7 +6,7 @@
     centered
     @cancel="onClose"
     :footer="null"
-    class="report-modal"
+    class="quality-report-modal"
   >
     <div class="report-card">
       <div class="report-title">{{ title }}</div>
@@ -35,21 +35,41 @@
         </a-col>
       </a-row>
 
-      <div class="section-title">处理结果：</div>
+      <div class="section-title">质控评价结果:</div>
       
       <!-- Content -->
       <div class="report-content">
         <el-scrollbar height="200px">
-          <div v-for="(item, index) in conditions" :key="index" class="condition-item">
-            <template v-if="shouldShowCondition(item)">
-              <span class="condition-label">{{ item.text }}:</span>
-              <span class="condition-value">{{ formatValue(item) }}</span>
-            </template>
+          <!-- Overall Quality -->
+          <div class="condition-item">
+            <span class="condition-label">整体质量:</span>
+            <span class="condition-value">{{ qualityData.quality || '未评价' }}</span>
           </div>
-          <div v-if="advice" class="advice-item">
-            <span class="condition-label">辅助建议:</span>
-            <span class="condition-value">{{ advice }}</span>
-          </div>
+
+          <!-- Ranse Errors (Staining) -->
+          <template v-for="(item, index) in qualityData.ranseErrors" :key="'ranse-'+index">
+             <div v-if="item.value === '有'" class="condition-item">
+               <span class="condition-label">{{ item.title }}:</span>
+               <span class="condition-value">{{ item.value }}</span>
+             </div>
+          </template>
+
+          <!-- Qiepian Errors (Slice) -->
+          <template v-for="(item, index) in qualityData.qiepianErrors" :key="'qiepian-'+index">
+             <div v-if="item.value === '有'" class="condition-item">
+               <span class="condition-label">切片异常-{{ item.title }}:</span>
+               <span class="condition-value">{{ item.value }}</span>
+             </div>
+          </template>
+
+          <!-- Saomiao Errors (Scanning) -->
+          <template v-for="(item, index) in qualityData.saomiaoErrors" :key="'saomiao-'+index">
+             <div v-if="item.value === '有'" class="condition-item">
+               <span class="condition-label">扫描异常-{{ item.title }}:</span>
+               <span class="condition-value">{{ item.value }}</span>
+             </div>
+          </template>
+
         </el-scrollbar>
       </div>
 
@@ -72,18 +92,14 @@
 <script setup>
 import { ref, defineProps, defineEmits, onMounted, watch } from 'vue';
 import * as userApi from '@/service/user.js';
-import { getCheckoutOptionLabel } from '@/common/options.js';
-import { message } from 'ant-design-vue';
 
 const props = defineProps({
   visible: Boolean,
-  title: { type: String, default: '病理图像处理结果' },
+  title: { type: String, default: '质控评价结果' },
   sliceNo: String,
   uploadTime: String,
   processTime: String,
-  conditions: { type: Array, default: () => [] },
-  advice: String,
-  slicePart: String,
+  qualityData: { type: Object, default: () => ({}) },
   exportLoading: Boolean,
   saveLoading: Boolean
 });
@@ -119,31 +135,6 @@ const onClose = () => {
 
 const onDownload = () => emit('download');
 const onSave = () => emit('save');
-
-// Helper to format value based on options
-const formatValue = (item) => {
-  if (item.key === 'result') {
-    return item.value || '无';
-  }
-  // CheckBox usually has value 0 or 10. 10 is '有'/'阳性'
-  if (item.componentType === 'CheckBox') {
-    return item.value === 10 ? '阳性' : '阴性'; // Or use option label if available
-  }
-  
-  // For SingleRadio, map value to label
-  if (item.options) {
-    return getCheckoutOptionLabel(item.options, item.value, props.slicePart);
-  }
-  return item.value;
-};
-
-const shouldShowCondition = (item) => {
-  // Show if value is not 0/null/empty
-  if (item.value === 0 || item.value === null || item.value === '') return false;
-  // Always show 'result' (Overall result) if present
-  if (item.key === 'result') return true;
-  return true;
-};
 
 onMounted(() => {
   if (props.visible) fetchSignature();
@@ -192,7 +183,7 @@ onMounted(() => {
   margin-bottom: 20px;
 }
 
-.condition-item, .advice-item {
+.condition-item {
   margin-bottom: 10px;
   font-size: 14px;
 }

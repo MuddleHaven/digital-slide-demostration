@@ -216,7 +216,7 @@ export function useSlideQuality() {
       const payload = {
         sliceId: sliceId,
         category: {
-          type: 1, // Assuming default type
+          type: 2, // Manual save
           totalResult: data.quality === '不合格' ? 10 : 0,
           // Map fields back
         }

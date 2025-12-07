@@ -97,6 +97,17 @@ export function checkDefaultPassword(){
   })
 }
 
+export function uploadElecName(data){
+  return request({
+    url:'/user/uploadElecName',
+    method:'post',
+    data: data,
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
+}
+
 // changePassword
 export function changePassword(data){
   return request({

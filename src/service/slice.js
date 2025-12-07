@@ -400,11 +400,11 @@ export function exportPDF(data) { //导出为pdf
 
 //关于质控评价:
 
-export function updateQCResult(params) { //更新质控评价
+export function updateQCResult(data) { //更新质控评价
   return requestQuality({
-    url: '/quality/updateResult',
+    url: '/qualityCheck/updateQualityCheck',
     method: 'post',
-    params: params
+    data: data
   })
 }
 /// 获取质控评价 (手动/已保存)
@@ -427,16 +427,16 @@ export function getAIQCResult(sliceId) {
 
 //获取打印时候的预览数据
 export function getQCPrintReport(sliceId) { 
-  return request({
-    url: '/quality/getPrintReport',
+  return requestQuality({
+    url: '/qualityCheck/getPrintReport',
     method: 'get',
-    params: sliceId
+    params: { sliceId }
   })
 }
 
 export function exportQCPDF(data) { //导出为pdf
-  return request({
-    url: '/quality/exportPDF',
+  return requestQuality({
+    url: '/qualityCheck/exportPDF',
     method: 'post',
     data: data
   })
