@@ -3,8 +3,8 @@
     <!-- Header -->
     <div class="title" v-if="!collapsed">
       <span class="l-c-text">切片列表</span>
-      <a-select v-model:value="pannelValue" :options="options" class="status_select" style="width: 120px;"
-        @change="onPannelChange" size="small" />
+      <!-- <a-select v-model:value="pannelValue" :options="options" class="status_select" style="width: 120px;"
+        @change="onPannelChange" size="small" /> -->
     </div>
     <div class="title collapsed-title" v-else>
       <span>列表</span>

@@ -6,7 +6,15 @@
     </div>
 
     <!-- Left Sidebar: Floating Slide List -->
-    <div class="absolute top-5 left-5 bottom-5 z-100 pointer-events-none">
+    <div class="absolute top-5 left-5 z-101 pointer-events-auto">
+      <a-button type="primary" shape="circle" size="large" @click="goBack">
+        <template #icon>
+          <ArrowLeftOutlined />
+        </template>
+      </a-button>
+    </div>
+
+    <div class="absolute top-20 left-5 bottom-5 z-100 pointer-events-none">
       <div class="pointer-events-auto h-full">
         <SlideListSide :slices="slideList" :active-index="currentIndex" :pannel="pannel" :options="options"
           :collapsed="leftCollapsed" @select-slice="selectSlide" @toggle-collapse="toggleLeft"
@@ -15,29 +23,23 @@
     </div>
 
     <!-- Right Sidebar: result panel -->
-    <div class="absolute top-5 right-5 bottom-5 z-100 pointer-events-none" :class="{'!right-0': rightCollapsed}">
-      <div class="pointer-events-auto h-full transition-all duration-300" :style="{ width: rightCollapsed ? '0px' : '350px' }">
+    <div class="absolute top-5 right-5 bottom-5 z-100 pointer-events-none" :class="{ '!right-0': rightCollapsed }">
+      <div class="pointer-events-auto h-full transition-all duration-300"
+        :style="{ width: rightCollapsed ? '0px' : '350px' }">
         <div v-if="!rightCollapsed" class="h-full">
-          <QualityPanel
-            v-if="pannel === '整体质量'"
-            :quality="qualityData.quality"
-            :ai-quality="qualityData.aiQuality"
-            :qualities="[{label:'合格', value:'0'}, {label:'不合格', value:'10'}]"
-            :ranse-errors="qualityData.ranseErrors"
-            :qiepian-errors="qualityData.qiepianErrors"
-            :saomiao-errors="qualityData.saomiaoErrors"
-            :label="currentSlide?.no || ''"
-            @change-quality="(val) => qualityData.quality = val"
-            @save-and-view="handleSaveQuality"
-            @next-slice="handleNext"
-            @toggle-collapse="toggleRight"
-            @update-quality-areas="handleQualityAreasUpdate"
-          />
+          <QualityPanel v-if="pannel === '整体质量'" :quality="qualityData.quality" :ai-quality="qualityData.aiQuality"
+            :qualities="[{ label: '合格', value: '0' }, { label: '不合格', value: '10' }]" :ranse-errors="qualityData.ranseErrors"
+            :qiepian-errors="qualityData.qiepianErrors" :saomiao-errors="qualityData.saomiaoErrors"
+            :label="currentSlide?.no || ''" @change-quality="(val) => qualityData.quality = val"
+            @save-and-view="handleSaveQuality" @next-slice="handleNext" @toggle-collapse="toggleRight"
+            @update-quality-areas="handleQualityAreasUpdate" />
         </div>
         <div v-if="rightCollapsed" class="absolute right-5 top-1/2 -translate-y-1/2 z-101 pointer-events-auto">
-            <div class="w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center cursor-pointer text-gray-600 hover:text-blue-500" @click="toggleRight">
-              <LeftOutlined />
-            </div>
+          <div
+            class="w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center cursor-pointer text-gray-600 hover:text-blue-500"
+            @click="toggleRight">
+            <LeftOutlined />
+          </div>
         </div>
       </div>
     </div>
@@ -47,7 +49,7 @@
 <script setup>
 import { ref, computed, onMounted, watch, provide } from 'vue';
 import { useRouter } from 'vue-router';
-import { LeftOutlined } from '@ant-design/icons-vue';
+import { LeftOutlined, ArrowLeftOutlined } from '@ant-design/icons-vue';
 import { useSlideQualityDetail } from '@/composables/use-slide-quality-detail';
 import { useSlideQuality } from '@/composables/use-slide-quality';
 import { SlicePart } from '@/common/options.js';
@@ -67,7 +69,8 @@ const {
   initSlideList, selectSlide
 } = useSlideQualityDetail();
 
-const { qualityData, loadQuality, saveQuality, loadAIQualityData, updateQualityAreas } = useSlideQuality();
+const { qualityData, loadQuality, saveQuality,
+  loadAIQualityData, updateQualityAreas } = useSlideQuality();
 
 const pannel = ref("整体质量");
 const rightCollapsed = ref(false);

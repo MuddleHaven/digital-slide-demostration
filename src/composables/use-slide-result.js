@@ -1,7 +1,7 @@
 import { ref } from 'vue';
 import * as sliceAPI from '@/service/slice.js';
 import { message } from 'ant-design-vue';
-import { getCheckoutOptionsArray } from '@/common/options.js';
+import { AllPartConditions, SlicePart } from '@/common/options.js';
 
 export function useSlideResult() {
   const resultData = ref({
@@ -25,7 +25,9 @@ export function useSlideResult() {
 
         resultData.value.conditions = defaults;
         resultData.value.advice = res.data.recommendation || '';
-        // Actual merging of values needs specific logic based on options keys
+        
+        // Merge saved result values into conditions
+        updateValuesInConditions(res.data);
       } else {
         resultData.value.conditions = getInitialConditions(slicePart);
         resultData.value.advice = '';
@@ -35,19 +37,39 @@ export function useSlideResult() {
       // Currently storing it in resultData if the user wants to access it
       if (aiRes.data) {
         resultData.value.aiResult = aiRes.data;
+        updateAiAnalyzeInConditions(aiRes.data);
       }
     } catch (e) {
       console.error("Load result error", e);
     }
   };
 
+  const updateValuesInConditions = (data) => {
+    if (!data) return;
+    resultData.value.conditions.forEach(condition => {
+      const key = condition.key;
+      if (data[key] !== undefined) {
+        condition.value = data[key];
+      }
+    });
+  };
+
+  const updateAiAnalyzeInConditions = (aiData) => {
+    if (!aiData) return;
+
+    resultData.value.conditions.forEach(condition => {
+      const key = condition.key;
+      if (aiData[key] !== undefined) {
+        condition.AiAnalyze = aiData[key];
+      }
+    });
+  };
+
   const getInitialConditions = (part) => {
-    // This should return the array structure like 'simplifiedIllCondition' in reference
-    // We might need to export this from options.js or reconstruct it
-    return [
-      { text: "总体诊断", key: "overall", value: "", options: "OverallOptions", componentType: "SingleRadio" },
-      { text: "Placeholder Condition 1", key: "c1", value: [], options: "YouWuOptions", componentType: "CheckBox" }
-    ];
+    // Return deep copy of conditions based on part
+    const conditions = AllPartConditions[part] || AllPartConditions[SlicePart.stomach];
+    // Deep copy to avoid mutating the original exported array
+    return JSON.parse(JSON.stringify(conditions));
   };
 
   const saveResult = async (sliceId, data) => {

@@ -5,7 +5,7 @@ import { createVNode } from 'vue';
 import * as sliceAPI from '@/service/slice.js';
 import { SliceStatusEnum } from '@/common/sliceTypes.js';
 
-export function useUpload(fetchDataCallback) {
+export function useUpload(fetchDataCallback, activeTab) {
   // Modal visibility
   const uploadModalVisible = ref(false);
   const isUploading = ref(false);
@@ -20,6 +20,9 @@ export function useUpload(fetchDataCallback) {
   // Upload list (status of uploaded files from server)
   const uploadList = ref([]);
   const uploadTimer = ref(null);
+
+  // Helper to determine which API to use
+  const isQuality = computed(() => activeTab && activeTab.value === 'quality');
 
   // Remove duplicate files
   const uniqueArr = (arr, existingFiles) => {
@@ -57,7 +60,13 @@ export function useUpload(fetchDataCallback) {
     // In a real scenario, you might want to optimize this call or debounce it
     // Here we follow the logic to check duplicates against server
     try {
-      let res = await sliceAPI.getSliceFileNames();
+      let res;
+      if (isQuality.value) {
+        res = await sliceAPI.getQualitySliceFileNames();
+      } else {
+        res = await sliceAPI.getSliceFileNames();
+      }
+      
       if (res.code === 200) {
         fileList.value = uniqueArr(fileList.value, res.data);
       }
@@ -116,7 +125,13 @@ export function useUpload(fetchDataCallback) {
       let formdata = new FormData();
       formdata.append("files", currentFile.file);
 
-      let res = await sliceAPI.upload(formdata);
+      let res;
+      if (isQuality.value) {
+        res = await sliceAPI.uploadQuality(formdata);
+      } else {
+        res = await sliceAPI.upload(formdata);
+      }
+
       clearInterval(progressInterval);
 
       if (res.code === 200) {
@@ -204,7 +219,13 @@ export function useUpload(fetchDataCallback) {
    */
   const fetchUploadData = async () => {
     try {
-      const response = await sliceAPI.getUploadProgress();
+      let response;
+      if (isQuality.value) {
+        response = await sliceAPI.getQualityUploadProgress();
+      } else {
+        response = await sliceAPI.getUploadProgress();
+      }
+      
       if (response.code === 200 && response.data) {
         uploadList.value = response.data.map((item) => ({
           ...item,

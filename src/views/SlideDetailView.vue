@@ -6,7 +6,13 @@
     </div>
 
     <!-- Left Sidebar: Floating Slide List -->
-    <div class="absolute top-5 left-5 bottom-5 z-100 pointer-events-none">
+    <div class="absolute top-5 left-5 z-101 pointer-events-auto">
+      <a-button type="primary" shape="circle" size="large" @click="goBack">
+        <template #icon><ArrowLeftOutlined /></template>
+      </a-button>
+    </div>
+
+    <div class="absolute top-20 left-5 bottom-5 z-100 pointer-events-none">
       <div class="pointer-events-auto h-full">
         <SlideListSide :slices="slideList" :active-index="currentIndex" :pannel="pannel" :options="options"
           :collapsed="leftCollapsed" @select-slice="selectSlide" @toggle-collapse="toggleLeft"
@@ -21,26 +27,11 @@
            <ResultPanel 
              v-if="pannel === '整体结果'"
              :conditions="resultConditions" 
-             :advice="resultData.aiResult?.advice || ''"
-             @update:advice="(val) => { if(resultData.aiResult) resultData.aiResult.advice = val }"
+             :advice="resultData.advice"
+             @update:advice="(val) => { resultData.advice = val }"
              @toggle-collapse="toggleRight"
              @save-and-view="handleSave"
              @next-slice="handleNext"
-          />
-          <QualityPanel
-            v-else
-            :quality="qualityData.quality"
-            :ai-quality="qualityData.aiQuality"
-            :qualities="[{label:'合格', value:'0'}, {label:'不合格', value:'10'}]"
-            :ranse-errors="qualityData.ranseErrors"
-            :qiepian-errors="qualityData.qiepianErrors"
-            :saomiao-errors="qualityData.saomiaoErrors"
-            :label="currentSlide?.no || ''"
-            @change-quality="(val) => qualityData.quality = val"
-            @save-and-view="handleSaveQuality"
-            @next-slice="handleNext"
-            @toggle-collapse="toggleRight"
-            @update-quality-areas="handleQualityAreasUpdate"
           />
         </div>
         <div v-if="rightCollapsed" class="absolute right-5 top-1/2 -translate-y-1/2 z-101 pointer-events-auto">
@@ -56,16 +47,14 @@
 <script setup>
 import { ref, computed, onMounted, watch, provide } from 'vue';
 import { useRouter } from 'vue-router';
-import { LeftOutlined } from '@ant-design/icons-vue';
+import { LeftOutlined, ArrowLeftOutlined } from '@ant-design/icons-vue';
 import { useSlideDetail } from '@/composables/use-slide-detail';
 import { useSlideResult } from '@/composables/use-slide-result';
-import { useSlideQuality } from '@/composables/use-slide-quality';
 import { AllPartConditions, SlicePart } from '@/common/options.js';
 
 // Components
 import SlideListSide from '@/components/slide/SlideListSide.vue';
 import ResultPanel from '@/components/slide/ResultPanel.vue';
-import QualityPanel from '@/components/slide/QualityPanel.vue';
 import OpenseadragonViewer from '@/components/OpenseadragonViewer.vue';
 
 // Router
@@ -78,8 +67,7 @@ const {
   initSlideList, selectSlide
 } = useSlideDetail();
 
-const { resultData, loadResult } = useSlideResult();
-const { qualityData, loadQuality, saveQuality, loadAIQualityData, updateQualityAreas } = useSlideQuality();
+const { resultData, loadResult, saveResult } = useSlideResult();
 
 const pannel = ref("整体结果");
 const rightCollapsed = ref(false);
@@ -87,7 +75,6 @@ const rightCollapsed = ref(false);
 // 下拉选项
 const options = ref([
   { value: '整体结果', label: '整体结果' },
-  { value: '整体质量', label: '整体质量' },
 ]);
 
 // Provide current slice part to children
@@ -107,8 +94,13 @@ provide('currentSlicePart', currentSlicePart);
 
 // Computed Conditions
 const resultConditions = computed(() => {
+  // Use loaded conditions from resultData if available
+  if (resultData.value && resultData.value.conditions && resultData.value.conditions.length > 0) {
+    return resultData.value.conditions;
+  }
+  // Fallback to static default based on part
   const part = currentSlicePart.value;
-  return AllPartConditions[part];
+  return AllPartConditions[part] || [];
 });
 
 // Handlers
@@ -125,16 +117,20 @@ const goBack = () => {
 };
 
 const handleSave = () => {
-  // Implement save logic
-  console.log('Save and View clicked');
-};
-
-const handleSaveQuality = () => {
-  saveQuality(currentSlide.value.id, qualityData.value);
-};
-
-const handleQualityAreasUpdate = (areas) => {
-  updateQualityAreas({ type: 'manual', areas }); // Pass appropriate type if needed, or adjust composable
+  if (!currentSlide.value) return;
+  
+  const data = {};
+  // Map conditions to key-value pairs
+  if (resultData.value.conditions) {
+    resultData.value.conditions.forEach(item => {
+      data[item.key] = item.value;
+    });
+  }
+  // Add recommendation/advice
+  data.recommendation = resultData.value.advice;
+  
+  // Call save service
+  saveResult(currentSlide.value.id, data);
 };
 
 const handleNext = () => {
@@ -149,8 +145,6 @@ const handleNext = () => {
 watch(currentSlide, (newVal) => {
   if (newVal) {
     loadResult(newVal.id, newVal.collectionArea);
-    loadQuality(newVal.id);
-    loadAIQualityData(newVal.id);
   }
 });
 

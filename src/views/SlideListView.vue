@@ -388,7 +388,7 @@ const {
 } = useUpload(() => {
   if (activeTab.value === 'result') fetchData();
   else qFetchData();
-});
+}, activeTab);
 
 const columns = [
   { title: '序号', key: 'index', width: 60, align: 'center' },

@@ -22,9 +22,6 @@ export function useSlideQuality() {
   // 质量控制区域数据
   const currentQualityAreas = ref([]);
 
-  // AI质量控制轮廓数据
-  const currentAIQualityData = ref([]);
-
   // 初始化空的质量控制数据结构
   const createEmptyQualityData = () => {
     return {
@@ -94,35 +91,48 @@ export function useSlideQuality() {
 
   // 获取质量控制结果
   const loadQuality = async (sliceId) => {
-    // 先检查本地缓存
-    if (qualityDataMap.value.has(sliceId)) {
-      const cachedData = qualityDataMap.value.get(sliceId);
-      qualityData.value = { ...cachedData };
-      return { success: true, id: cachedData.id };
-    }
+    // 强制每次都重新获取数据，以确保与AI数据同步
+    // if (qualityDataMap.value.has(sliceId)) { ... } // 移除缓存逻辑
 
     try {
-      const res = await sliceAPI.getQCResult(sliceId);
+      const [aiRes, res] = await Promise.all([
+        sliceAPI.getAIQCResult(sliceId),
+        sliceAPI.getQCResult(sliceId)
+      ]);
+
+      const currentData = getCurrentSliceQualityData(sliceId);
+
+      // 1. 处理医生保存的质控结果 (res)
       if (res.data && res.data.category) {
         const cat = res.data.category;
-        const currentData = getCurrentSliceQualityData(sliceId);
-
         currentData.quality = cat.totalResult > 0 ? '不合格' : '合格';
         currentData.id = res.data.id;
-
-        // Update fields
+        
+        // 更新各项错误字段的值 (value)
         updateErrorFields(currentData, cat);
-
-        qualityDataMap.value.set(sliceId, currentData);
-        qualityData.value = { ...currentData };
-
-        return { success: true, id: res.data.id };
       } else {
-        const currentData = getCurrentSliceQualityData(sliceId);
-        qualityDataMap.value.set(sliceId, currentData);
-        qualityData.value = { ...currentData };
-        return { success: true, id: null };
+        // 如果没有保存过，重置为默认值
+        const empty = createEmptyQualityData();
+        Object.assign(currentData, empty);
       }
+
+      // 2. 处理 AI 分析结果 (aiRes)
+      if (aiRes.data) {
+        // 更新 AI 质量状态
+        if (aiRes.data.totalResult !== undefined) {
+          currentData.aiQuality = aiRes.data.totalResult > 0 ? '不合格' : '合格';
+        }
+        
+        // 更新各项错误字段的 AI 分析值 (AIAnalyze)
+        updateAIAnalyzeFields(currentData, aiRes.data);
+      }
+
+      // 3. 更新状态
+      qualityDataMap.value.set(sliceId, currentData);
+      qualityData.value = { ...currentData };
+
+      return { success: true, id: currentData.id };
+
     } catch (error) {
       console.error('Failed to load quality data:', error);
       return { success: false, error };
@@ -192,35 +202,6 @@ export function useSlideQuality() {
         err.value = apiToFront(val);
       }
     });
-  };
-
-  const loadAIQualityData = async (sliceId) => {
-    if (!sliceId) return { success: false };
-
-    try {
-      const res = await sliceAPI.getAIQCResult(sliceId);
-      if (res.data) {
-        const currentData = getCurrentSliceQualityData(sliceId);
-
-        // Update AI quality status if available
-        if (res.data.totalResult !== undefined) {
-          currentData.aiQuality = res.data.totalResult > 0 ? '不合格' : '合格';
-        }
-
-        // Update AI Analyze fields
-        updateAIAnalyzeFields(currentData, res.data);
-
-        // Force update refs
-        qualityDataMap.value.set(sliceId, currentData);
-        qualityData.value = { ...currentData };
-
-        return { success: true, data: res.data };
-      }
-      return { success: false };
-    } catch (error) {
-      console.error('Failed to load AI quality data:', error);
-      return { success: false, error };
-    }
   };
 
   const updateQuality = (sliceId, newQuality) => {
@@ -301,10 +282,8 @@ export function useSlideQuality() {
   return {
     qualityData,
     currentQualityAreas,
-    currentAIQualityData,
     switchToSlice,
     loadQuality,
-    loadAIQualityData,
     updateQuality,
     saveQuality,
     updateQualityAreas,

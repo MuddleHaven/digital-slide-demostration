@@ -27,6 +27,17 @@ export function upload(files) { //上传切片
   })
 }
 
+export function uploadQuality(files) { //上传质控切片
+  return requestQuality({
+    url: '/slice/upload',
+    method: 'post',
+    data: files,
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
+}
+
 export function reUpload(sliceId) { //重新上传
   return request({
     url: '/slice/reUpload',
@@ -104,6 +115,13 @@ export function getSliceFileNames() { //查询切片的名称
   })
 }
 
+export function getQualitySliceFileNames() { //查询质控切片的名称
+  return requestQuality({
+    url: '/slice/getSliceFileNames',
+    method: 'get',
+  })
+}
+
 
 // Date uploadStartTime
 // Date processStartTime
@@ -113,6 +131,13 @@ export function getSliceFileNames() { //查询切片的名称
 
 export function getUploadProgress() { //查询上传进度
   return request({
+    url: '/slice/getUploadProgress',
+    method: 'get',
+  })
+}
+
+export function getQualityUploadProgress() { //查询质控上传进度
+  return requestQuality({
     url: '/slice/getUploadProgress',
     method: 'get',
   })
