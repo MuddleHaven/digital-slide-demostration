@@ -5,26 +5,20 @@
       <div class="panel-header">
         <span class="l-c-text">质控面板</span>
       </div>
-      
+
       <div class="scroll-container">
         <!-- Overall Quality Selection -->
         <div class="quality-selection-row">
           <span class="label-text">切片质量: </span>
           <div class="quality-options">
-            <div 
-              v-for="q in qualities" 
-              :key="q.value" 
-              class="quality-option"
-              :class="{ 
-                'active': quality === q.value,
-                'active-pass': quality === '合格' && q.value === '合格',
-                'active-fail': quality === '不合格' && q.value === '不合格'
-              }"
-              @click="onChange(q.value)"
-            >
+            <div v-for="q in qualities" :key="q.value" class="quality-option" :class="{
+              'active': quality == q.value,
+              'active-pass': quality == q.value && q.value == 0,
+              'active-fail': quality == q.value && q.value == 10
+            }" @click="onChange(q.value)">
               <a-badge>
                 <template #count>
-                  <div class="Aistyle" v-if="aiQuality === q.value">AI</div>
+                  <div class="Aistyle" v-if="aiQuality == q.value">AI</div>
                   <div v-else></div>
                 </template>
                 <span class="option-text">{{ q.label }}</span>
@@ -34,28 +28,16 @@
         </div>
 
         <!-- Sections -->
-        <QualitySection 
-          title="染色差异" 
-          :errors="ranseErrors" 
-          :all-options="allOptions"
-          @update-quality-areas="(areas) => $emit('update-quality-areas', areas)"
-        />
-        
-        <QualitySection 
-          title="扫描异常" 
-          :errors="saomiaoErrors" 
-          :all-options="allOptions"
-          @update-quality-areas="(areas) => $emit('update-quality-areas', areas)"
-        />
+        <QualitySection title="染色差异" :errors="ranseErrors" :all-options="allOptions"
+          @update-quality-areas="(areas) => emit('update-quality-areas', areas)" />
 
-        <QualitySection 
-          title="切片异常" 
-          :errors="qiepianErrors" 
-          :all-options="allOptions"
-          @update-quality-areas="(areas) => $emit('update-quality-areas', areas)"
-        />
+        <QualitySection title="扫描异常" :errors="saomiaoErrors" :all-options="allOptions"
+          @update-quality-areas="(areas) => emit('update-quality-areas', areas)" />
+
+        <QualitySection title="切片异常" :errors="qiepianErrors" :all-options="allOptions"
+          @update-quality-areas="(areas) => emit('update-quality-areas', areas)" />
       </div>
-      
+
       <div class="control-circle2" @click="onToggleCollapse">
         <RightOutlined />
       </div>
@@ -68,13 +50,8 @@
       </div>
       <div class="res-card">
         <div style="height: 100%; overflow-y: auto;">
-          <QualitySummary 
-            :label="label"
-            :currentQuality="quality"
-            :ranseErrors="ranseErrors"
-            :qiepianErrors="qiepianErrors"
-            :saomiaoErrors="saomiaoErrors"
-          />
+          <QualitySummary :label="label" :currentQuality="quality" :ranseErrors="ranseErrors"
+            :qiepianErrors="qiepianErrors" :saomiaoErrors="saomiaoErrors" />
         </div>
       </div>
       <div class="action-buttons">
@@ -96,17 +73,19 @@ import QualitySummary from './QualitySummary.vue';
 import { allOptions } from '@/common/options.js';
 
 const props = defineProps({
-  quality: String,
-  aiQuality: String,
+  quality: [String, Number],
+  aiQuality: [String, Number],
   qualities: {
     type: Array,
-    default: () => [{label:'合格', value:'合格'}, {label:'不合格', value:'不合格'}]
   },
   ranseErrors: Array,
   qiepianErrors: Array,
   saomiaoErrors: Array,
   label: String
 });
+
+console.log('quality pannel props:', 'qualities:', props.qualities, 'quality:', props.quality, 'aiQuality:', props.aiQuality,
+  props.ranseErrors, props.qiepianErrors, props.saomiaoErrors);
 
 const emit = defineEmits(['change-quality', 'save-and-view', 'next-slice', 'toggle-collapse', 'update-quality-areas']);
 
@@ -162,7 +141,8 @@ const onToggleCollapse = () => emit('toggle-collapse');
 .panel-header {
   margin-bottom: 15px;
   font-weight: bold;
-  font-size: 18px; /* Larger header */
+  font-size: 18px;
+  /* Larger header */
   color: #333;
 }
 
@@ -209,17 +189,19 @@ const onToggleCollapse = () => emit('toggle-collapse');
 
 /* Pass state (Greenish if needed, but user image shows purple for fail) */
 .quality-option.active-pass {
-  background-color: #37AE2F; /* Green for pass */
+  background-color: #37AE2F;
+  /* Green for pass */
 }
 
 /* Fail state (Purple as in user image) */
 .quality-option.active-fail {
-  background-color: #242BA0; /* Purple for fail */
+  background-color: #242BA0;
+  /* Purple for fail */
 }
 
 .Aistyle {
   position: absolute;
-  top: -8px;
+  top: -4px;
   right: -8px;
   width: 16px;
   height: 16px;
@@ -243,7 +225,7 @@ const onToggleCollapse = () => emit('toggle-collapse');
   height: 30px;
   background: white;
   border-radius: 50%;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -276,6 +258,7 @@ const onToggleCollapse = () => emit('toggle-collapse');
 .scroll-container::-webkit-scrollbar {
   width: 4px;
 }
+
 .scroll-container::-webkit-scrollbar-thumb {
   background: #ccc;
   border-radius: 2px;

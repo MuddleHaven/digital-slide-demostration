@@ -1,14 +1,14 @@
 <template>
   <div class="radio-group">
     <label :class="{ 'disabled': disabled }" @click="disabled ? showWarning() : selectOption()" class="radio-label">
-      <img :src="isSelected(options[0]) ? activeImgSrc : noneImgSrc" alt="" class="radio-img"
+      <img :src="isSelected(options[1]) ? activeImgSrc : noneImgSrc" alt="" class="radio-img"
         :class="{ 'disabled': disabled }" />
       <a-badge>
         <template #count>
           <div class="Aistyle" v-if="showAIBadge">AI</div>
           <div v-else></div>
         </template>
-        <span class="label-text" :class="{ 'unselect': !isSelected(options[0]) }">{{ title }}</span>
+        <span class="label-text" :class="{ 'unselect': !isSelected(options[1]) }">{{ title }}</span>
       </a-badge>
     </label>
   </div>
@@ -74,7 +74,7 @@ const isSelected = (option) => {
 
 const showWarning = () => {
   message.warn("当前不可以选");
-  selectedOption.value = '无';
+  selectedOption.value = 0;
   emit('update:modelValue', selectedOption.value);
 };
 </script>

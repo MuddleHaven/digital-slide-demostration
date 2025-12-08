@@ -39,7 +39,7 @@
       
       <!-- Content -->
       <div class="report-content">
-        <el-scrollbar height="200px">
+        <div class="scroll-area">
           <div v-for="(item, index) in conditions" :key="index" class="condition-item">
             <template v-if="shouldShowCondition(item)">
               <span class="condition-label">{{ item.text }}:</span>
@@ -50,7 +50,7 @@
             <span class="condition-label">辅助建议:</span>
             <span class="condition-value">{{ advice }}</span>
           </div>
-        </el-scrollbar>
+        </div>
       </div>
 
       <!-- Signature -->
@@ -73,7 +73,6 @@
 import { ref, defineProps, defineEmits, onMounted, watch } from 'vue';
 import * as userApi from '@/service/user.js';
 import { getCheckoutOptionLabel } from '@/common/options.js';
-import { message } from 'ant-design-vue';
 
 const props = defineProps({
   visible: Boolean,
@@ -190,6 +189,11 @@ onMounted(() => {
   padding: 15px;
   border-radius: 8px;
   margin-bottom: 20px;
+}
+
+.scroll-area {
+  height: 200px;
+  overflow-y: auto;
 }
 
 .condition-item, .advice-item {

@@ -5,7 +5,7 @@ export const shangpiOptions = ['低级别','高级别']
 export const xirouoptions = ['炎性','胃底腺','增生性','腺瘤性']
 export const yinyangOptions = ['阴性','阳性']
 export const resultOptions = ['非肿瘤性','癌前状态','癌前病变','恶性肿瘤']
-export const YouWuOptions = ['有','无']
+export const YouWuOptions = [{label: '无', value: 0}, {label: '有', value: 10}]
 
 export const allOptions = {
   "highoptions":highoptions,

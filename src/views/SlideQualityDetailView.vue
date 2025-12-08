@@ -33,7 +33,7 @@
         :style="{ width: rightCollapsed ? '0px' : '350px' }">
         <div v-if="!rightCollapsed" class="h-full">
           <QualityPanel v-if="pannel === '整体质量'" :quality="qualityData.quality" :ai-quality="qualityData.aiQuality"
-            :qualities="[{ label: '合格', value: '0' }, { label: '不合格', value: '10' }]"
+            :qualities="[{ label: '合格', value: 0 }, { label: '不合格', value: 10 }]"
             :ranse-errors="qualityData.ranseErrors" :qiepian-errors="qualityData.qiepianErrors"
             :saomiao-errors="qualityData.saomiaoErrors" :label="currentSlide?.no || ''"
             @change-quality="(val) => qualityData.quality = val" @save-and-view="handleSaveQuality"
@@ -94,8 +94,10 @@ const {
   initSlideList, selectSlide
 } = useSlideQualityDetail();
 
-const { qualityData, loadQuality, saveQuality,
-  loadAIQualityData, updateQualityAreas } = useSlideQuality();
+const { qualityData, loadQuality, 
+  saveQuality, updateQualityAreas } = useSlideQuality();
+
+console.log('qualityData =============', qualityData.value);
 
 const pannel = ref("整体质量");
 const rightCollapsed = ref(false);
@@ -240,7 +242,6 @@ watch(currentSlide, (newVal) => {
   if (newVal) {
     // Only load quality data, skip result/aiResult
     loadQuality(newVal.id);
-    loadAIQualityData(newVal.id);
   }
 });
 

@@ -4,9 +4,9 @@
     <a-col :span="18" class="verticalcenter">
       <div class="quality-items-container">
         <CheckBoxWithTitle 
-          v-for="error in errors" 
+          v-for="error in props.errors" 
           :key="error.title" 
-          :options="allOptions[error.options] || defaultOptions"
+          :options="allOptions[error.options]"
           :disabled="error.disabled" 
           v-model="error.value" 
           :title="error.title" 
@@ -38,14 +38,15 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['update-quality-areas']);
+console.log(props.allOptions, props.errors, props.title);
 
-const defaultOptions = [{label: '无', value: '无'}, {label: '有', value: '有'}];
+
+const emit = defineEmits(['update-quality-areas']);
 
 // 当质量选项改变时
 const onQualityChange = (error, value) => {
   // 生成对应的质量控制区域数据
-  if (value === '有') {
+  if (value === 10) {
     const areas = generateQualityAreas(error.title);
     emit('update-quality-areas', areas);
   } else {

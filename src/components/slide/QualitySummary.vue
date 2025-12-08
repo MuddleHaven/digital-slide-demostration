@@ -6,8 +6,8 @@
     </div>
     <div class="summary-row">
       <span class="label">整体质量:</span>
-      <span class="value quality-tag" :class="currentQuality === '合格' ? 'tag-green' : 'tag-red'">
-        {{ currentQuality || '未评定' }}
+      <span class="value quality-tag" :class="currentQuality == 0 ? 'tag-green' : 'tag-red'">
+        {{ currentQuality == 0 ? '合格' : '不合格' }}
       </span>
     </div>
     
@@ -34,7 +34,7 @@ const props = defineProps({
     required: true
   },
   currentQuality: {
-    type: String,
+    type: [String, Number],
     required: true
   },
   ranseErrors: {

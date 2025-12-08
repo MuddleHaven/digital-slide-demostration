@@ -39,7 +39,7 @@
       
       <!-- Content -->
       <div class="report-content">
-        <el-scrollbar height="200px">
+        <div class="scroll-area">
           <!-- Overall Quality -->
           <div class="condition-item">
             <span class="condition-label">整体质量:</span>
@@ -70,7 +70,7 @@
              </div>
           </template>
 
-        </el-scrollbar>
+        </div>
       </div>
 
       <!-- Signature -->
@@ -181,6 +181,11 @@ onMounted(() => {
   padding: 15px;
   border-radius: 8px;
   margin-bottom: 20px;
+}
+
+.scroll-area {
+  height: 200px;
+  overflow-y: auto;
 }
 
 .condition-item {
