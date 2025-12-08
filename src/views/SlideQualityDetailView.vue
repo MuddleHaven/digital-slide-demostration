@@ -2,7 +2,12 @@
   <div class="relative w-screen h-screen overflow-hidden bg-black">
     <!-- Openseadragon Viewer (Full Screen) -->
     <div class="absolute top-0 left-0 w-full h-full z-1">
-      <OpenseadragonViewer :slide-id="currentSlide?.id" :detail="currentSlide" :is-quality="true" />
+      <OpenseadragonViewer :slide-id="currentSlide?.id" 
+      :detail="currentSlide" 
+      :is-quality="true" 
+      :left-sidebar-width="leftCollapsed ? 0 : 250"
+      :right-sidebar-width="rightCollapsed ? 0 : 350"
+    />
     </div>
 
     <!-- Left Sidebar: Floating Slide List -->

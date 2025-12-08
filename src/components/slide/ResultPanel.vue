@@ -5,8 +5,8 @@
       <div class="panel-header">
         <span class="l-c-text">处理面板</span>
       </div>
-      <div class="scroll-container" style="height: 53vh; overflow-y: auto; padding-right: 5px;">
-        <a-row class="row-css" v-for="(condition, index) in localConditions" :key="index" align="middle">
+      <div class="scroll-container">
+        <a-row class="row-css" v-for="(condition, index) in props.conditions" :key="index" align="middle">
           <!-- Label Column -->
           <a-col :span="8" class="choice_text" :class="{ 'disabled': condition.disabled }">
             <div class="label-wrapper">
@@ -33,12 +33,12 @@
     </a-card>
 
     <!-- Lower Panel -->
-    <a-card class="right-down-card cardcommon" style="margin-top: 10px;">
+    <a-card class="right-down-card cardcommon">
       <div class="panel-header">
         <span class="l-c-text">辅助建议</span>
       </div>
       <div class="res-card">
-         <div style="height: 15vh; overflow-y: auto;">
+         <div style="height: 100%; overflow-y: auto;">
           <a-textarea v-model:value="adviceValue" placeholder="请填写辅助建议" :auto-size="{ minRows: 3, maxRows: 6 }" class="res-text textarea-text" />
         </div>
       </div>
@@ -150,6 +150,34 @@ const onToggleCollapse = () => {
   display: flex;
   flex-direction: column;
   pointer-events: auto; /* Ensure interaction */
+  gap: 10px;
+}
+
+.right-up-card {
+  flex: 1;
+  min-height: 0; /* Allow flex shrinking */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Make card body fill height */
+:deep(.ant-card-body) {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 12px; /* Adjust padding if needed */
+}
+
+.scroll-container {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.right-down-card {
+  flex-shrink: 0; /* Don't shrink too much */
+  /* height: auto; Remove fixed height */
+  /* max-height: 30%; */
 }
 
 .cardcommon {

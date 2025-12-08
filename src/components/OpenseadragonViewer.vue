@@ -148,6 +148,14 @@ const props = defineProps({
   isQuality: {
     type: Boolean,
     default: false
+  },
+  rightSidebarWidth: {
+    type: [Number, String],
+    default: 0
+  },
+  leftSidebarWidth: {
+    type: [Number, String],
+    default: 0
   }
 });
 
@@ -292,13 +300,14 @@ watch(() => props.aiResult, (newVal) => {
 .controls-overlay {
   position: absolute;
   top: 10px;
-  right: 10px;
+  left: calc(100px + v-bind('leftSidebarWidth + "px"')); /* Dynamic Left Position */
   pointer-events: none;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: flex-start; /* Align to start */
   z-index: 4;
   gap: 10px;
+  transition: left 0.3s ease;
 }
 
 .navigator {
@@ -312,9 +321,10 @@ watch(() => props.aiResult, (newVal) => {
 
 .ai-controls-overlay {
   position: absolute;
-  bottom: 30px;
-  right: 10px;
+  top: 30px;
+  right: calc(40px + v-bind('rightSidebarWidth + "px"')); /* Dynamic Right Position */
   z-index: 5;
+  transition: right 0.3s ease;
 }
 
 .algorithm-btn {

@@ -6,7 +6,7 @@
         <span class="l-c-text">质控面板</span>
       </div>
       
-      <div class="scroll-container" style="height: 53vh; overflow-y: auto; padding-right: 5px;">
+      <div class="scroll-container">
         <!-- Overall Quality Selection -->
         <div class="quality-selection-row">
           <span class="label-text">切片质量: </span>
@@ -62,12 +62,12 @@
     </a-card>
 
     <!-- Bottom Panel: Summary and Actions -->
-    <a-card class="right-down-card cardcommon" style="margin-top: 10px;">
+    <a-card class="right-down-card cardcommon">
       <div class="panel-header">
         <span class="l-c-text">质控评价</span>
       </div>
       <div class="res-card">
-        <div style="height: 15vh; overflow-y: auto;">
+        <div style="height: 100%; overflow-y: auto;">
           <QualitySummary 
             :label="label"
             :currentQuality="quality"
@@ -125,6 +125,31 @@ const onToggleCollapse = () => emit('toggle-collapse');
   display: flex;
   flex-direction: column;
   pointer-events: auto;
+  gap: 10px;
+}
+
+.right-up-card {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+:deep(.ant-card-body) {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+}
+
+.scroll-container {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.right-down-card {
+  flex-shrink: 0;
 }
 
 .cardcommon {
