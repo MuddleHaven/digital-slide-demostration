@@ -11,6 +11,7 @@
           v-model="error.value" 
           :title="error.title" 
           :AIAnalyze="error.AIAnalyze"
+          :color="error.color"
           @update:model-value="onQualityChange(error, $event)"
           class="quality-item"
         />
@@ -46,31 +47,12 @@ const emit = defineEmits(['update-quality-areas']);
 // 当质量选项改变时
 const onQualityChange = (error, value) => {
   // 生成对应的质量控制区域数据
-  if (value === 10) {
-    const areas = generateQualityAreas(error.title);
-    emit('update-quality-areas', areas);
-  } else {
-    // 移除对应区域
-    emit('update-quality-areas', []);
+  if (value === 10 || value === 0) {
+    const areasError = {...error};
+    emit('update-quality-areas', areasError);
   }
 };
 
-// 根据错误类型生成质量控制区域（示例数据，实际应该从AI分析结果获取）
-const generateQualityAreas = (errorTitle) => {
-  // 这里应该根据AI分析结果生成实际的区域坐标
-  // 目前返回示例数据
-  return [
-    {
-      x: Math.random() * 500,
-      y: Math.random() * 500,
-      width: 100 + Math.random() * 100,
-      height: 100 + Math.random() * 100,
-      description: `${errorTitle}检测区域`,
-      showLabel: true,
-      opacity: 0.3
-    }
-  ];
-};
 </script>
 
 <style scoped>

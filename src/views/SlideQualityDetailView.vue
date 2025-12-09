@@ -2,8 +2,10 @@
   <div class="relative w-screen h-screen overflow-hidden bg-black">
     <!-- Openseadragon Viewer (Full Screen) -->
     <div class="absolute top-0 left-0 w-full h-full z-1">
-      <OpenseadragonViewer :slide-id="currentSlide?.id" 
+      <OpenseadragonViewer 
+      :slide-id="currentSlide?.id" 
       :detail="currentSlide" 
+      :currentQualityAreas="currentQualityAreas"
       :is-quality="true" 
       :left-sidebar-width="leftCollapsed ? 0 : 250"
       :right-sidebar-width="rightCollapsed ? 0 : 350"
@@ -32,12 +34,18 @@
       <div class="pointer-events-auto h-full transition-all duration-300"
         :style="{ width: rightCollapsed ? '0px' : '350px' }">
         <div v-if="!rightCollapsed" class="h-full">
-          <QualityPanel v-if="pannel === '整体质量'" :quality="qualityData.quality" :ai-quality="qualityData.aiQuality"
+          <QualityPanel v-if="pannel === '整体质量'" 
+            :quality="qualityData.quality" 
+            :ai-quality="qualityData.aiQuality"
             :qualities="[{ label: '合格', value: 0 }, { label: '不合格', value: 10 }]"
-            :ranse-errors="qualityData.ranseErrors" :qiepian-errors="qualityData.qiepianErrors"
-            :saomiao-errors="qualityData.saomiaoErrors" :label="currentSlide?.no || ''"
-            @change-quality="(val) => qualityData.quality = val" @save-and-view="handleSaveQuality"
-            @next-slice="handleNext" @toggle-collapse="toggleRight" @update-quality-areas="handleQualityAreasUpdate" />
+            :ranse-errors="qualityData.ranseErrors" 
+            :qiepian-errors="qualityData.qiepianErrors"
+            :saomiao-errors="qualityData.saomiaoErrors" 
+            :label="currentSlide?.no || ''"
+            @change-quality="(val) => qualityData.quality = val" 
+            @save-and-view="handleSaveQuality"
+            @next-slice="handleNext" @toggle-collapse="toggleRight" 
+            @update-quality-areas="handleQualityAreasUpdate" />
         </div>
         <div v-if="rightCollapsed" class="absolute right-5 top-1/2 -translate-y-1/2 z-101 pointer-events-auto">
           <div
@@ -95,9 +103,7 @@ const {
 } = useSlideQualityDetail();
 
 const { qualityData, loadQuality, 
-  saveQuality, updateQualityAreas } = useSlideQuality();
-
-console.log('qualityData =============', qualityData.value);
+  saveQuality, updateQualityAreas, currentQualityAreas } = useSlideQuality();
 
 const pannel = ref("整体质量");
 const rightCollapsed = ref(false);
@@ -228,7 +234,7 @@ const handleSignatureSuccess = () => {
 };
 
 const handleQualityAreasUpdate = (areas) => {
-  updateQualityAreas({ type: 'manual', areas });
+  updateQualityAreas({ type: areas.key, ...areas });
 };
 
 const handleNext = () => {

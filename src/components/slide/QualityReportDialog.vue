@@ -43,33 +43,32 @@
           <!-- Overall Quality -->
           <div class="condition-item">
             <span class="condition-label">整体质量:</span>
-            <span class="condition-value">{{ qualityData.quality || '未评价' }}</span>
+            <span class="condition-value">{{ qualityData.quality == 10 ? '不合格':'合格' }}</span>
           </div>
 
           <!-- Ranse Errors (Staining) -->
           <template v-for="(item, index) in qualityData.ranseErrors" :key="'ranse-'+index">
-             <div v-if="item.value === '有'" class="condition-item">
+             <div v-if="item.value == 10" class="condition-item">
                <span class="condition-label">{{ item.title }}:</span>
-               <span class="condition-value">{{ item.value }}</span>
-             </div>
-          </template>
-
-          <!-- Qiepian Errors (Slice) -->
-          <template v-for="(item, index) in qualityData.qiepianErrors" :key="'qiepian-'+index">
-             <div v-if="item.value === '有'" class="condition-item">
-               <span class="condition-label">切片异常-{{ item.title }}:</span>
-               <span class="condition-value">{{ item.value }}</span>
+               <span class="condition-value">{{ item.value == 10 ? '有':'无' }}</span>
              </div>
           </template>
 
           <!-- Saomiao Errors (Scanning) -->
           <template v-for="(item, index) in qualityData.saomiaoErrors" :key="'saomiao-'+index">
-             <div v-if="item.value === '有'" class="condition-item">
+             <div v-if="item.value == 10" class="condition-item">
                <span class="condition-label">扫描异常-{{ item.title }}:</span>
-               <span class="condition-value">{{ item.value }}</span>
+               <span class="condition-value">{{ item.value == 10 ? '有':'无' }}</span>
              </div>
           </template>
 
+          <!-- Qiepian Errors (Slice) -->
+          <template v-for="(item, index) in qualityData.qiepianErrors" :key="'qiepian-'+index">
+             <div v-if="item.value == 10" class="condition-item">
+               <span class="condition-label">切片异常-{{ item.title }}:</span>
+               <span class="condition-value">{{ item.value == 10 ? '有':'无' }}</span>
+             </div>
+          </template>
         </div>
       </div>
 

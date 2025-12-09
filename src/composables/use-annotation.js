@@ -13,8 +13,6 @@ export function useAnnotation(stage, layer, viewer) {
   let isPolyDrawing = false;
 
   // Helper to get scale correction
-  // Since we are drawing on a layer that is scaled by viewport zoom,
-  // we need to adjust stroke width and handle sizes inversely to keep them visible
   const getScaleCorrection = () => {
     if (!stage.value) return 1;
     const scaleX = stage.value.scaleX();
@@ -24,12 +22,7 @@ export function useAnnotation(stage, layer, viewer) {
 
   const updateShapeStyles = (shape) => {
     const scale = getScaleCorrection();
-    // Ensure visible stroke width regardless of zoom
-    // Base width 2px, scaled up when zoomed out
     shape.strokeWidth(2 * scale);
-
-    // If shape has radius (e.g. circle handles in transformer), we might need to adjust them too
-    // But for now let's stick to stroke width
   };
 
   const updateTransformerConfig = () => {
@@ -130,28 +123,8 @@ export function useAnnotation(stage, layer, viewer) {
     const scale = getScaleCorrection();
     const clientRect = shape.getClientRect({ skipTransform: false });
 
-    // Place at top-right corner
-    // We need to account for the layer scale? No, deleteGroup is inside layer.
-    // So we use coordinate system of the layer.
-    // But getClientRect returns absolute position relative to stage (if skipTransform false)
-    // Or relative to something else?
-    // Let's use shape position + width?
-    // Complex shapes (rotated) make this hard.
-    // Using transformer position might be easier if possible.
-
     // Simple approach: Top right of bounding box
-    const bbox = shape.getClientRect(); // Relative to stage? No, usually absolute unless specified.
-    // Wait, getClientRect() is relative to the stage top-left.
-    // We need local coordinates for the layer.
-
-    // Easier: shape.x() + width? Only works for unrotated rects.
-
-    // Let's try using the transformer's back logic or just offset from the shape center/position.
-    // Actually, transformer puts handles around the shape.
-    // We can find the top-right point of the shape in the layer's coordinate space.
-
-    // Let's stick to a simple offset from the shape's reported position for now, 
-    // or use `getClientRect` and transform it back to layer coords.
+    const bbox = shape.getClientRect();
 
     const transform = layer.value.getAbsoluteTransform().copy();
     transform.invert();
@@ -272,12 +245,6 @@ export function useAnnotation(stage, layer, viewer) {
     ) {
       return;
     }
-
-    // Check if we clicked on an existing shape to select it
-    // But only if we are NOT currently drawing a polygon (multi-click)
-    // And we want to allow selection even if a tool is active?
-    // User said: "Just turn on annotation function, default can select and delete"
-    // So if I click on a shape, I select it. If I drag on empty space, I draw.
 
     const clickedShape = e.target.findAncestor('.annotation') || e.target;
     if (clickedShape && clickedShape.hasName('annotation')) {

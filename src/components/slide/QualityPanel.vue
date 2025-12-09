@@ -12,7 +12,6 @@
           <span class="label-text">切片质量: </span>
           <div class="quality-options">
             <div v-for="q in qualities" :key="q.value" class="quality-option" :class="{
-              'active': quality == q.value,
               'active-pass': quality == q.value && q.value == 0,
               'active-fail': quality == q.value && q.value == 10
             }" @click="onChange(q.value)">
@@ -21,7 +20,7 @@
                   <div class="Aistyle" v-if="aiQuality == q.value">AI</div>
                   <div v-else></div>
                 </template>
-                <span class="option-text">{{ q.label }}</span>
+                <span :class="{'active': quality == q.value}">{{ q.label }}</span>
               </a-badge>
             </div>
           </div>
@@ -180,9 +179,11 @@ const onToggleCollapse = () => emit('toggle-collapse');
   color: #666;
   transition: all 0.3s;
   position: relative;
+  min-width: 84px;
+  text-align: center;
 }
 
-.quality-option.active {
+.quality-option .active {
   font-weight: bold;
   color: white;
 }
@@ -190,13 +191,11 @@ const onToggleCollapse = () => emit('toggle-collapse');
 /* Pass state (Greenish if needed, but user image shows purple for fail) */
 .quality-option.active-pass {
   background-color: #37AE2F;
-  /* Green for pass */
 }
 
 /* Fail state (Purple as in user image) */
 .quality-option.active-fail {
   background-color: #242BA0;
-  /* Purple for fail */
 }
 
 .Aistyle {

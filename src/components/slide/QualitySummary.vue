@@ -15,7 +15,7 @@
     <div class="error-list">
       <template v-for="category in qualityCategories" :key="category.name">
         <div v-for="item in category.errors" :key="item.title" class="error-item">
-          <div v-if="item.value == '有'" class="error-text">
+          <div v-if="item.value == 10" class="error-text">
             <span class="error-dot"></span>
             {{ category.prefix ? `${category.prefix}-${item.title}` : item.title }}
           </div>
@@ -69,6 +69,10 @@ const qualityCategories = computed(() => [
     prefix: '扫描'
   }
 ]);
+
+console.log('QualitySummary props:', props.currentQuality, props.label, props.ranseErrors, props.qiepianErrors, props.saomiaoErrors);
+console.log('qualityCategories:', qualityCategories.value);
+
 </script>
 
 <style scoped>

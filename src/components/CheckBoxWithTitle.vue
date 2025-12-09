@@ -8,7 +8,10 @@
           <div class="Aistyle" v-if="showAIBadge">AI</div>
           <div v-else></div>
         </template>
-        <span class="label-text" :class="{ 'unselect': !isSelected(options[1]) }">{{ title }}</span>
+        <div style="display: flex; align-items: center; gap: 6px;">
+           <span v-if="color" class="color-dot" :style="{ backgroundColor: color }"></span>
+           <span class="label-text" :class="{ 'unselect': !isSelected(options[1]) }">{{ title }}</span>
+        </div>
       </a-badge>
     </label>
   </div>
@@ -42,6 +45,10 @@ const props = defineProps({
   },
   AIAnalyze: {
     type: [String, Number],
+    default: '',
+  },
+  color: {
+    type: String,
     default: '',
   }
 });
@@ -98,9 +105,13 @@ const showWarning = () => {
   width: 1.2vw;
   height: 1.2vw;
   display: inline-block;
-  vertical-align: middle;
-  cursor: pointer;
+}
 
+.color-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
 }
 
 .disabled {

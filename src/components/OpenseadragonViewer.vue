@@ -7,6 +7,9 @@
     <!-- Konva Overlay -->
     <div id="konva-overlay-container" class="konva-overlay" :style="{ pointerEvents: activeTool ? 'auto' : 'none' }">
     </div>
+    <!-- Quality Overlay (Konva) -->
+    <div id="quality-overlay-container" class="konva-overlay" style="pointer-events: none; z-index: 100;">
+    </div>
     <!-- Controls Overlay (Navigator, etc.) -->
     <div class="controls-overlay">
       <div id="navigatorDiv" class="navigator"></div>
@@ -122,6 +125,7 @@ import { useOsdKonva } from '@/composables/use-osd-konva';
 import { useMeasurement } from '@/composables/use-measurement';
 import { useAnnotation } from '@/composables/use-annotation';
 import { useAiVisualization } from '@/composables/use-ai-visualization';
+import { useQualityVisualization } from '@/composables/use-quality-visualization';
 import {
   LineChartOutlined,
   EditOutlined,
@@ -144,6 +148,10 @@ const props = defineProps({
   aiResult: {
     type: Object,
     default: null
+  },
+  currentQualityAreas: {
+    type: Array,
+    default: () => []
   },
   isQuality: {
     type: Boolean,
@@ -184,6 +192,15 @@ const {
   toggleHeatmap,
   toggleContour
 } = useAiVisualization(viewer, null);
+
+// Quality Visualization
+const { initQualityKonva, drawQualityContours } = useQualityVisualization(viewer, 'quality-overlay-container');
+
+// Watch for changes in currentQualityAreas to update contours
+watch(() => props.currentQualityAreas, (newAreas) => {
+  console.log('useSlideQuality currentQualityAreas changed:', newAreas);
+  drawQualityContours(newAreas);
+}, { deep: true });
 
 const activeTool = ref(null); // null, 'measure', 'annotation'
 const selectedAnnoKeys = ref(['rectangle']); // Default
@@ -231,6 +248,7 @@ onMounted(() => {
 
   // Initialize Konva Overlay
   initKonva();
+  initQualityKonva();
   initAnnotation();
   initMeasurement();
 
