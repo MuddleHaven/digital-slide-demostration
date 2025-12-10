@@ -312,7 +312,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'; // Import ref
+import { ref, onMounted, watch } from 'vue'; // Import ref
+import { useRouter, useRoute } from 'vue-router'; // Import router composables
 import { 
   UploadOutlined, SearchOutlined, DeleteOutlined, 
   FundProjectionScreenOutlined, EyeOutlined, ReloadOutlined, 
@@ -336,7 +337,14 @@ import {
 import FlowingProgressBar from '@/components/FlowingProgressBar.vue';
 import ProcessResult from '@/components/ProcessResult.vue';
 
-const activeTab = ref('result');
+const router = useRouter();
+const route = useRoute();
+
+const activeTab = ref(route.query.tab || 'result');
+
+watch(activeTab, (newTab) => {
+  router.replace({ query: { ...route.query, tab: newTab } });
+});
 
 const {
   tableData,
