@@ -14,7 +14,7 @@
       </a-form>
     </a-card>
   </div>
-  
+
 </template>
 
 <script setup>
@@ -54,19 +54,20 @@ const login = async () => {
         ]);
 
         loading.value = false
-        
+
         // 只要主服务登录成功，就允许进入，但提示质控服务状态
         if (loginResponse.code == 200) {
           localStorage.setItem('token', loginResponse.data.token);
           localStorage.setItem('role', loginResponse.data.roleName);
 
           if (qualityLoginResponse && qualityLoginResponse.code == 200) {
-             localStorage.setItem('qualityToken', qualityLoginResponse.data.token);
-             message.success('登录成功');
+            localStorage.setItem('qualityToken', qualityLoginResponse.data.token);
+            localStorage.setItem('qualityRole', qualityLoginResponse.data.roleName);
+            message.success('登录成功');
           } else {
-             message.warning('主服务登录成功，但质控服务连接失败，部分功能可能受限');
+            message.warning('主服务登录成功，但质控服务连接失败，部分功能可能受限');
           }
-          
+
           router.push('/list');
         } else {
           message.error(loginResponse.msg || '登录失败');

@@ -4,8 +4,9 @@ import { v4 as uuidv4 } from 'uuid';
 import * as sliceAPI from '@/service/slice.js';
 
 export function useAnnotation(stage, layer, viewer) {
-  const isAnnotating = ref(false);
-  const currentTool = ref('rectangle'); // Default to rectangle
+  const isAnnotating = ref(false); 
+  // Default to rectangle
+  const currentTool = ref('rectangle');
   const selectedShapeId = ref(null);
 
   let transformer = null;
@@ -430,7 +431,7 @@ export function useAnnotation(stage, layer, viewer) {
         res.data.forEach(anno => {
           const scale = getScaleCorrection();
           let shape;
-          const jsonData = anno.jsonData; // Assuming jsonData is already parsed object based on log
+          const jsonData = anno.jsonData;
 
           // If jsonData is string, parse it
           let data = jsonData;

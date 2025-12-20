@@ -16,22 +16,22 @@ export function getSliceList(current, size) { //获取切片的分页数据
   })
 }
 
-export function upload(files) { //上传切片
+export function upload(formData) { //上传切片
   return request({
     url: '/slice/upload',
     method: 'post',
-    data: files,
+    data: formData,
     headers: {
       'Content-Type': 'multipart/form-data'
     }
   })
 }
 
-export function uploadQuality(files) { //上传质控切片
+export function uploadQuality(formData) { //上传质控切片
   return requestQuality({
     url: '/slice/upload',
     method: 'post',
-    data: files,
+    data: formData,
     headers: {
       'Content-Type': 'multipart/form-data'
     }

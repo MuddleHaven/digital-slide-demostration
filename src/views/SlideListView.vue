@@ -17,7 +17,7 @@
             <div>
               <a-button type="primary" @click="uploadModalVisible = true">
                 <template #icon><UploadOutlined /></template>
-                上传切片
+                诊断上传
               </a-button>
             </div>
           </div>
@@ -146,9 +146,9 @@
               </a-button>
             </div>
             <div>
-              <a-button type="primary" @click="uploadModalVisible = true">
+              <a-button type="primary" @click="qUploadModalVisible = true">
                 <template #icon><UploadOutlined /></template>
-                上传切片
+                质控上传
               </a-button>
             </div>
           </div>
@@ -246,15 +246,24 @@
       </a-tabs>
     </a-card>
 
-    <!-- Upload Modal -->
+    <!-- Result Upload Modal -->
     <a-modal
       v-model:open="uploadModalVisible"
-      title="上传切片"
+      title="上传辅助诊断切片"
       :footer="null"
       width="800px"
       :maskClosable="false"
     >
       <div v-if="!isUploading">
+        <a-form layout="inline" style="margin-bottom: 16px;">
+          <a-form-item label="部位">
+            <a-radio-group v-model:value="collectionArea">
+              <a-radio-button value="胃">胃部</a-radio-button>
+              <a-radio-button value="肺">肺部</a-radio-button>
+              <a-radio-button value="肠">肠部</a-radio-button>
+            </a-radio-group>
+          </a-form-item>
+        </a-form>
         <a-upload-dragger
           v-model:fileList="fileList"
           name="file"
@@ -266,11 +275,11 @@
           <p class="ant-upload-drag-icon">
             <InboxOutlined />
           </p>
-          <p class="ant-upload-text">点击或拖拽文件到此处上传</p>
+          <p class="ant-upload-text">点击或拖拽文件到此处上传（辅助诊断）</p>
           <p class="ant-upload-hint">支持 .svs, .tmap, .kfb, .sdpc 格式</p>
         </a-upload-dragger>
         <div style="text-align: right; margin-top: 16px;">
-          <a-button type="primary" @click="uploadFiles" :disabled="fileList.length === 0">开始上传</a-button>
+          <a-button type="primary" @click="uploadFiles" :disabled="fileList.length === 0">开始上传辅助诊断切片</a-button>
         </div>
       </div>
       <div v-else>
@@ -294,6 +303,63 @@
       </div>
     </a-modal>
 
+    <!-- Quality Upload Modal -->
+    <a-modal
+      v-model:open="qUploadModalVisible"
+      title="上传质控切片"
+      :footer="null"
+      width="800px"
+      :maskClosable="false"
+    >
+      <div v-if="!qIsUploading">
+        <a-form layout="inline" style="margin-bottom: 16px;">
+          <a-form-item label="部位">
+            <a-radio-group v-model:value="qCollectionArea">
+              <a-radio-button value="胃">胃部</a-radio-button>
+              <a-radio-button value="肺">肺部</a-radio-button>
+              <a-radio-button value="肠">肠部</a-radio-button>
+            </a-radio-group>
+          </a-form-item>
+        </a-form>
+        <a-upload-dragger
+          v-model:fileList="qFileList"
+          name="file"
+          :multiple="true"
+          accept=".svs, .tmap, .kfb, .sdpc"
+          :beforeUpload="qBeforeUpload"
+          @change="qOnFileChange"
+        >
+          <p class="ant-upload-drag-icon">
+            <InboxOutlined />
+          </p>
+          <p class="ant-upload-text">点击或拖拽文件到此处上传（质控评价）</p>
+          <p class="ant-upload-hint">支持 .svs, .tmap, .kfb, .sdpc 格式</p>
+        </a-upload-dragger>
+        <div style="text-align: right; margin-top: 16px;">
+          <a-button type="primary" @click="qUploadFiles" :disabled="qFileList.length === 0">开始上传质控切片</a-button>
+        </div>
+      </div>
+      <div v-else>
+        <div style="max-height: 400px; overflow-y: auto;">
+          <div v-for="(item, index) in qUploadQueue" :key="index" style="margin-bottom: 10px;">
+            <div style="display: flex; justify-content: space-between;">
+              <span>{{ item.name }}</span>
+              <span>
+                <a-tag v-if="item.status === 'success'" color="success">完成</a-tag>
+                <a-tag v-else-if="item.status === 'error'" color="error">失败</a-tag>
+                <a-tag v-else-if="item.status === 'uploading'" color="processing">上传中</a-tag>
+                <a-tag v-else>等待中</a-tag>
+              </span>
+            </div>
+            <a-progress :percent="item.progress" size="small" status="active" />
+          </div>
+        </div>
+        <div style="text-align: right; margin-top: 16px;">
+          <a-button danger @click="qCancelAllPendingUploads">取消剩余</a-button>
+        </div>
+      </div>
+    </a-modal>
+
     <!-- Result Modal -->
     <a-modal
       v-model:open="resultModalVisible"
@@ -312,16 +378,17 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'; // Import ref
-import { useRouter, useRoute } from 'vue-router'; // Import router composables
+import { ref, onMounted, watch } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { 
   UploadOutlined, SearchOutlined, DeleteOutlined, 
   FundProjectionScreenOutlined, EyeOutlined, ReloadOutlined, 
   InboxOutlined, LoadingOutlined 
 } from '@ant-design/icons-vue';
 import { useSlideList } from '@/composables/use-slide-list';
-import { useSlideQualityList } from '@/composables/use-slide-quality-list'; // Import Quality List
+import { useSlideQualityList } from '@/composables/use-slide-quality-list';
 import { useUpload } from '@/composables/use-upload';
+import { useQualityUpload } from '@/composables/use-quality-upload';
 import { 
   QualityCheckStatusEnum,
   qualityCheckStatusOptions,
@@ -388,15 +455,29 @@ const {
   isUploading,
   fileList,
   uploadQueue,
+  collectionArea,
   beforeUpload,
   onFileChange,
   uploadFiles,
   cancelAllPendingUploads,
   handleReupload
 } = useUpload(() => {
-  if (activeTab.value === 'result') fetchData();
-  else qFetchData();
-}, activeTab);
+  fetchData();
+});
+
+const {
+  uploadModalVisible: qUploadModalVisible,
+  isUploading: qIsUploading,
+  fileList: qFileList,
+  uploadQueue: qUploadQueue,
+  collectionArea: qCollectionArea,
+  beforeUpload: qBeforeUpload,
+  onFileChange: qOnFileChange,
+  uploadFiles: qUploadFiles,
+  cancelAllPendingUploads: qCancelAllPendingUploads
+} = useQualityUpload(() => {
+  qFetchData();
+});
 
 const columns = [
   { title: '序号', key: 'index', width: 60, align: 'center' },

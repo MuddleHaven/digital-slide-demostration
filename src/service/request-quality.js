@@ -1,6 +1,7 @@
 import axios from "axios";
 import { message } from 'ant-design-vue';
 import { useRouter } from "vue-router";
+import { clearLocalStorage } from "@/utils/index.js";
 
 // request config
 const RequestConfig = {
@@ -41,7 +42,7 @@ service.interceptors.response.use(
           // 删除token并重定向到登录页面
           message.error("请重新登录");
           const router = useRouter();
-          localStorage.clear();
+          clearLocalStorage();
           router.push('/login');
         } else if (res.code == 999) {
           // message.error(res.msg);

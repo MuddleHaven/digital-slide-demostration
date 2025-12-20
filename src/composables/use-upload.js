@@ -1,11 +1,10 @@
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { message, Modal } from 'ant-design-vue';
 import { ExclamationCircleOutlined } from '@ant-design/icons-vue';
 import { createVNode } from 'vue';
 import * as sliceAPI from '@/service/slice.js';
-import { SliceStatusEnum } from '@/common/sliceTypes.js';
 
-export function useUpload(fetchDataCallback, activeTab) {
+export function useUpload(fetchDataCallback) {
   // Modal visibility
   const uploadModalVisible = ref(false);
   const isUploading = ref(false);
@@ -21,8 +20,7 @@ export function useUpload(fetchDataCallback, activeTab) {
   const uploadList = ref([]);
   const uploadTimer = ref(null);
 
-  // Helper to determine which API to use
-  const isQuality = computed(() => activeTab && activeTab.value === 'quality');
+  const collectionArea = ref('胃');
 
   // Remove duplicate files
   const uniqueArr = (arr, existingFiles) => {
@@ -60,12 +58,7 @@ export function useUpload(fetchDataCallback, activeTab) {
     // In a real scenario, you might want to optimize this call or debounce it
     // Here we follow the logic to check duplicates against server
     try {
-      let res;
-      if (isQuality.value) {
-        res = await sliceAPI.getQualitySliceFileNames();
-      } else {
-        res = await sliceAPI.getSliceFileNames();
-      }
+      const res = await sliceAPI.getSliceFileNames();
       
       if (res.code === 200) {
         fileList.value = uniqueArr(fileList.value, res.data);
@@ -76,7 +69,7 @@ export function useUpload(fetchDataCallback, activeTab) {
   };
 
   const beforeUpload = () => {
-    return false; // Manual upload
+    return false;
   };
 
   // Main upload function
@@ -123,14 +116,11 @@ export function useUpload(fetchDataCallback, activeTab) {
 
     try {
       let formdata = new FormData();
-      formdata.append("files", currentFile.file);
+      formdata.append("file", currentFile.file);
 
-      let res;
-      if (isQuality.value) {
-        res = await sliceAPI.uploadQuality(formdata);
-      } else {
-        res = await sliceAPI.upload(formdata);
-      }
+      formdata.append("collectionArea", collectionArea.value);
+
+      const res = await sliceAPI.upload(formdata);
 
       clearInterval(progressInterval);
 
@@ -140,7 +130,6 @@ export function useUpload(fetchDataCallback, activeTab) {
         message.success(`文件 ${currentFile.name} 上传成功`);
       } else {
         currentFile.status = 'error';
-        message.error(`文件 ${currentFile.name} 上传失败: ${res.msg || '未知错误'}`);
       }
     } catch (error) {
       clearInterval(progressInterval);
@@ -154,8 +143,6 @@ export function useUpload(fetchDataCallback, activeTab) {
 
   const allFilesUploadSuccess = () => {
     uploadModalVisible.value = false;
-    message.success("文件正在解析中，详情请查看列表");
-    // Trigger data refresh in parent
     if (fetchDataCallback) fetchDataCallback();
   };
 
@@ -219,12 +206,7 @@ export function useUpload(fetchDataCallback, activeTab) {
    */
   const fetchUploadData = async () => {
     try {
-      let response;
-      if (isQuality.value) {
-        response = await sliceAPI.getQualityUploadProgress();
-      } else {
-        response = await sliceAPI.getUploadProgress();
-      }
+      const response = await sliceAPI.getUploadProgress();
       
       if (response.code === 200 && response.data) {
         uploadList.value = response.data.map((item) => ({
@@ -244,6 +226,7 @@ export function useUpload(fetchDataCallback, activeTab) {
     fileList,
     uploadQueue,
     uploadList,
+    collectionArea,
     onFileChange,
     beforeUpload,
     uploadFiles,

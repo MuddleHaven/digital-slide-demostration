@@ -95,12 +95,6 @@ export function useSlideList() {
       const { data } = response;
 
       if (data && data.records) {
-        const tissueType = import.meta.env.VITE_APP_TISSUE_TYPE || 'stomach';
-        let collectionArea = '胃';
-        if (tissueType === 'colon') collectionArea = '肠';
-        else if (tissueType === 'liver') collectionArea = '肝';
-        else if (tissueType === 'lung') collectionArea = '肺';
-
         tableData.value = data.records.map((record) => ({
           ...record,
           no: `No.${record.sliceNo}`,

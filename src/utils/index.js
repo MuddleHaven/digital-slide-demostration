@@ -55,3 +55,15 @@ export const getTileUrl = (tileUrl) => {
   }
   return tileUrl;
 }
+
+/**
+ * Clear local storage
+ */
+export function clearLocalStorage() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('role');
+  localStorage.removeItem('qualityToken');
+  localStorage.removeItem('qualityRole');
+
+  localStorage.clear();
+}

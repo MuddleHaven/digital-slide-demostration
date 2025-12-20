@@ -1,6 +1,7 @@
 import axios from "axios";
 import { message } from 'ant-design-vue';
 import { useRouter } from "vue-router";
+import { clearLocalStorage } from "@/utils/index.js";
 
 // request config
 const RequestConfig = {
@@ -94,7 +95,7 @@ service.interceptors.response.use(
       message.error("请重新登录");
       // 删除token 重定向到登录页面
       const router = useRouter();
-      localStorage.clear();
+      clearLocalStorage();
       router.push('/login');
     } else {
       debounce(message.error("连接失败"), 3000);
