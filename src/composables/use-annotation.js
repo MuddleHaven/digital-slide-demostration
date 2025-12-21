@@ -59,12 +59,10 @@ export function useAnnotation(stage, layer, viewer, options = {}) {
       ignoreStroke: true,
     });
 
-    // Hide delete button during transform
     transformer.on('transformstart', () => {
       removeDeleteGroup();
     });
 
-    // Show delete button after transform
     transformer.on('transformend', () => {
       const node = transformer.nodes()[0];
       if (node) {
@@ -74,7 +72,6 @@ export function useAnnotation(stage, layer, viewer, options = {}) {
 
     layer.value.add(transformer);
 
-    // Listen to zoom events to update styles
     if (viewer.value) {
       viewer.value.addHandler('animation', () => {
         updateTransformerConfig();
@@ -82,12 +79,8 @@ export function useAnnotation(stage, layer, viewer, options = {}) {
         const scale = getScaleCorrection();
         layer.value.find('.annotation').forEach(node => {
           node.strokeWidth(2 * scale);
-          if (node.className === 'Tag') {
-            // Handle tags/labels scaling if any
-          }
         });
 
-        // Update Delete Group Position/Scale if selected
         if (transformer && transformer.nodes().length > 0) {
           updateDeleteGroupPosition(transformer.nodes()[0]);
         }
@@ -95,10 +88,7 @@ export function useAnnotation(stage, layer, viewer, options = {}) {
         layer.value.batchDraw();
       });
     }
-  };
 
-  const activateAnnotation = () => {
-    isAnnotating.value = true;
     if (stage.value) {
       stage.value.on('mousedown.anno touchstart.anno', onMouseDown);
       stage.value.on('mousemove.anno touchmove.anno', onMouseMove);
@@ -107,11 +97,12 @@ export function useAnnotation(stage, layer, viewer, options = {}) {
     }
   };
 
+  const activateAnnotation = () => {
+    isAnnotating.value = true;
+  };
+
   const deactivateAnnotation = () => {
     isAnnotating.value = false;
-    if (stage.value) {
-      stage.value.off('.anno');
-    }
     selectShape(null);
   };
 
@@ -267,11 +258,13 @@ export function useAnnotation(stage, layer, viewer, options = {}) {
     const clickedShape = e.target.findAncestor('.annotation') || e.target;
     if (clickedShape && clickedShape.hasName('annotation')) {
       selectShape(clickedShape);
-      // Don't start drawing if we clicked a shape (drag to move)
       return;
     } else {
-      // Deselect if clicked on empty space
       selectShape(null);
+    }
+
+    if (!isAnnotating.value) {
+      return;
     }
 
     const pos = getRelativePointerPosition();
@@ -383,6 +376,7 @@ export function useAnnotation(stage, layer, viewer, options = {}) {
   };
 
   const onClick = (e) => {
+    if (!isAnnotating.value) return;
     if (currentTool.value === 'polygon') {
       const pos = getRelativePointerPosition();
       const scale = getScaleCorrection();

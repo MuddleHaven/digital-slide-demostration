@@ -5,7 +5,7 @@
 
     </div>
     <!-- Konva Overlay -->
-    <div id="konva-overlay-container" class="konva-overlay" :style="{ pointerEvents: activeTool ? 'auto' : 'none' }">
+    <div id="konva-overlay-container" class="konva-overlay">
     </div>
     <!-- Quality Overlay (Konva) -->
     <div id="quality-overlay-container" class="konva-overlay" style="pointer-events: none; z-index: 100;">
@@ -114,7 +114,7 @@
     </div>
 
     <div
-      v-if="activeTool === 'annotation' && selectedAnnoShapeId"
+      v-if="selectedAnnoShapeId"
       class="annotation-floating-toolbar"
       :style="{
         position: 'absolute',

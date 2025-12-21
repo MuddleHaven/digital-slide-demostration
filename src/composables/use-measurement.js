@@ -125,10 +125,6 @@ export function useMeasurement(stage, layer, viewer, options = {}) {
         updateMeasurementStyles();
       });
     }
-  };
-
-  const activateMeasurement = () => {
-    isMeasuring.value = true;
     if (stage.value) {
       stage.value.on('mousedown.measure touchstart.measure', onMouseDown);
       stage.value.on('mousemove.measure touchmove.measure', onMouseMove);
@@ -136,12 +132,13 @@ export function useMeasurement(stage, layer, viewer, options = {}) {
     }
   };
 
+  const activateMeasurement = () => {
+    isMeasuring.value = true;
+  };
+
   const deactivateMeasurement = () => {
     isMeasuring.value = false;
     isDrawing.value = false;
-    if (stage.value) {
-      stage.value.off('.measure');
-    }
   };
 
   const getRelativePointerPosition = () => {
@@ -160,6 +157,10 @@ export function useMeasurement(stage, layer, viewer, options = {}) {
       target.hasName('measurement-delete-text') ||
       target.getParent()?.hasName('measurement-delete-group')
     ) {
+      return;
+    }
+
+    if (!isMeasuring.value) {
       return;
     }
 
