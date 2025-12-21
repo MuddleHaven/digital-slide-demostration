@@ -2,11 +2,22 @@ import Konva from 'konva';
 import { ref, watch } from 'vue';
 import { v4 as uuidv4 } from 'uuid';
 
-export function useMeasurement(stage, layer, viewer) {
+/**
+ * 测量工具
+ * @param {Konva.Stage} stage 
+ * @param {Konva.Layer} layer 
+ * @param {OpenSeadragon.Viewer} viewer 
+ * @param {{conversionFactor: number, unit: string}} options 
+ */
+export function useMeasurement(stage, layer, viewer, options = {}) {
   const isMeasuring = ref(false);
   const isDrawing = ref(false);
 
-  // Helper to get scale correction
+  let conversionFactor = typeof options.conversionFactor === 'number' && options.conversionFactor > 0
+    ? options.conversionFactor
+    : 4;
+  let measurementUnit = options.unit || 'μm';
+
   const getScaleCorrection = () => {
     if (!stage.value) return 1;
     const scaleX = stage.value.scaleX();
@@ -31,7 +42,6 @@ export function useMeasurement(stage, layer, viewer) {
       node.pointerWidth(5 * scale);
     });
 
-    // Update Labels/Tags/Text
     layer.value.find('.measurement-tag').forEach(node => {
       node.pointerWidth(5 * scale);
       node.pointerHeight(5 * scale);
@@ -86,6 +96,29 @@ export function useMeasurement(stage, layer, viewer) {
     layer.value.batchDraw();
   };
 
+  const updateAllMeasurementLabels = () => {
+    if (!layer.value) return;
+    const arrows = layer.value.find('.measurement-arrow');
+    arrows.forEach(arrowNode => {
+      const points = arrowNode.points();
+      if (!points || points.length < 4) return;
+      const dx = points[2] - points[0];
+      const dy = points[3] - points[1];
+      const pixelDistance = Math.sqrt(dx * dx + dy * dy);
+      const physicalDistance = pixelDistance * conversionFactor;
+      const measurementId = arrowNode.getAttr('measurementId') || arrowNode.id();
+      const labelNode = layer.value.findOne(node =>
+        node.hasName('measurement-label') && node.getAttr('measurementId') === measurementId
+      );
+      if (!labelNode) return;
+      const textNode = labelNode.findOne('.measurement-text');
+      if (!textNode) return;
+      const distanceText = `${Math.round(physicalDistance)}${measurementUnit}`;
+      textNode.text(distanceText);
+    });
+    layer.value.batchDraw();
+  };
+
   const initMeasurement = () => {
     if (viewer.value) {
       viewer.value.addHandler('animation', () => {
@@ -119,10 +152,8 @@ export function useMeasurement(stage, layer, viewer) {
   };
 
   const onMouseDown = (e) => {
-    // Only left click
     if (e.evt.button !== 0) return;
 
-    // Check if we clicked on a delete button or something that shouldn't trigger draw
     const target = e.target;
     if (
       target.hasName('measurement-delete-icon') ||
@@ -136,7 +167,6 @@ export function useMeasurement(stage, layer, viewer) {
     const pos = getRelativePointerPosition();
     const scale = getScaleCorrection();
 
-    // Create Arrow
     const arrowId = uuidv4();
     arrow = new Konva.Arrow({
       points: [pos.x, pos.y, pos.x, pos.y],
@@ -148,13 +178,15 @@ export function useMeasurement(stage, layer, viewer) {
       name: 'measurement-arrow',
       id: arrowId
     });
+    arrow.setAttr('measurementId', arrowId);
 
-    // Create Label (Distance)
     label = new Konva.Label({
       x: pos.x,
       y: pos.y,
-      opacity: 0.75
+      opacity: 0.75,
+      name: 'measurement-label'
     });
+    label.setAttr('measurementId', arrowId);
 
     tag = new Konva.Tag({
       fill: 'black',
@@ -170,7 +202,7 @@ export function useMeasurement(stage, layer, viewer) {
     });
 
     text = new Konva.Text({
-      text: '0px',
+      text: `0${measurementUnit}`,
       fontFamily: 'Calibri',
       fontSize: 14 * scale,
       padding: 5 * scale,
@@ -189,19 +221,17 @@ export function useMeasurement(stage, layer, viewer) {
     if (!isDrawing.value) return;
     const pos = getRelativePointerPosition();
 
-    // Update arrow points
     const points = arrow.points();
     points[2] = pos.x;
     points[3] = pos.y;
     arrow.points(points);
 
-    // Calculate distance
     const dx = pos.x - points[0];
     const dy = pos.y - points[1];
-    const dist = Math.sqrt(dx * dx + dy * dy).toFixed(2);
-
-    // Update Label
-    text.text(`${dist}px`);
+    const pixelDistance = Math.sqrt(dx * dx + dy * dy);
+    const physicalDistance = pixelDistance * conversionFactor;
+    const distanceText = `${Math.round(physicalDistance)}${measurementUnit}`;
+    text.text(distanceText);
     label.position({
       x: (points[0] + pos.x) / 2,
       y: (points[1] + pos.y) / 2
@@ -222,15 +252,14 @@ export function useMeasurement(stage, layer, viewer) {
       const endY = points[3];
       const offset = 15 * scale;
 
-      // Create a delete button group attached to the measurement
       deleteGroup = new Konva.Group({
         x: endX + offset,
         y: endY - offset,
         name: 'measurement-delete-group',
-        arrowId: arrow.id() // Link to arrow
+        arrowId: arrow.id()
       });
-      // Custom attribute to store arrow ID
       deleteGroup.setAttr('arrowId', arrow.id());
+      deleteGroup.setAttr('measurementId', arrow.id());
 
       const deleteCircle = new Konva.Circle({
         radius: 8 * scale,
@@ -247,7 +276,6 @@ export function useMeasurement(stage, layer, viewer) {
         fontStyle: 'bold',
         name: 'measurement-delete-text'
       });
-      // Center text
       deleteText.offset({
         x: deleteText.width() / 2,
         y: deleteText.height() / 2
@@ -256,21 +284,17 @@ export function useMeasurement(stage, layer, viewer) {
       deleteGroup.add(deleteCircle);
       deleteGroup.add(deleteText);
 
-      // Make it clickable
       deleteGroup.on('click tap', (e) => {
-        // prevent default
-        e.cancelBubble = true; // Stop propagation in Konva
-        e.evt.preventDefault(); // Stop native event
-        e.evt.stopPropagation(); // Stop native propagation
+        e.cancelBubble = true;
+        e.evt.preventDefault();
+        e.evt.stopPropagation();
 
-        // Remove all related shapes
         arrowNode.destroy();
         labelNode.destroy();
         deleteGroupNode.destroy();
         layer.value.batchDraw();
       });
 
-      // Add mousedown to stop propagation so drawing doesn't start
       deleteGroup.on('mousedown touchstart', (e) => {
         e.cancelBubble = true;
       });
@@ -284,7 +308,6 @@ export function useMeasurement(stage, layer, viewer) {
       layer.value.batchDraw();
     }
 
-    // Reset references for next drawing
     arrow = null;
     label = null;
     tag = null;
@@ -292,10 +315,30 @@ export function useMeasurement(stage, layer, viewer) {
     deleteGroup = null;
   };
 
+  const clearMeasurements = () => {
+    if (!layer.value) return;
+    layer.value.find('.measurement-arrow').forEach(node => node.destroy());
+    layer.value.find('.measurement-label').forEach(node => node.destroy());
+    layer.value.find('.measurement-delete-group').forEach(node => node.destroy());
+    layer.value.batchDraw();
+  };
+
+  const setConversionFactor = (factor, unit) => {
+    if (typeof factor === 'number' && factor > 0) {
+      conversionFactor = factor;
+    }
+    if (unit) {
+      measurementUnit = unit;
+    }
+    updateAllMeasurementLabels();
+  };
+
   return {
     initMeasurement,
     activateMeasurement,
     deactivateMeasurement,
-    isMeasuring
+    isMeasuring,
+    clearMeasurements,
+    setConversionFactor
   };
 }

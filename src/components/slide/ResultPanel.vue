@@ -39,7 +39,9 @@
       </div>
       <div class="res-card">
          <div style="height: 100%; overflow-y: auto;">
-          <a-textarea v-model:value="adviceValue" placeholder="请填写辅助建议" :auto-size="{ minRows: 3, maxRows: 6 }" class="res-text textarea-text" />
+          <a-textarea v-model:value="adviceValue" placeholder="请填写辅助建议" 
+          :auto-size="{ minRows: 3, maxRows: 6 }" 
+          class="res-text textarea-text" />
         </div>
       </div>
       <div class="action-buttons">

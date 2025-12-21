@@ -1,13 +1,29 @@
 import Konva from 'konva';
-import { ref, watch } from 'vue';
+import { ref } from 'vue';
 import { v4 as uuidv4 } from 'uuid';
 import * as sliceAPI from '@/service/slice.js';
 
-export function useAnnotation(stage, layer, viewer) {
-  const isAnnotating = ref(false); 
-  // Default to rectangle
+/**
+ * annotation
+ * @param {Konva.Stage} stage 
+ * @param {Konva.Layer} layer 
+ * @param {OpenSeadragon.Viewer} viewer 
+ * @param {{initialSliceId: number, isQuality: boolean}} options 
+ */
+export function useAnnotation(stage, layer, viewer, options = {}) {
+  const isAnnotating = ref(false);
   const currentTool = ref('rectangle');
   const selectedShapeId = ref(null);
+  const selectedAnnoContent = ref('');
+  const currentSliceId = ref(options.initialSliceId || null);
+  const isQuality = !!options.isQuality;
+
+  const annoApi = {
+    getAnnos: isQuality ? sliceAPI.getQualityAnnos : sliceAPI.getAnnos,
+    insertAnno: isQuality ? sliceAPI.qualityInsertAnno : sliceAPI.insertAnno,
+    updateAnno: isQuality ? sliceAPI.qualityUpdateAnno : sliceAPI.updateAnno,
+    deleteAnno: isQuality ? sliceAPI.qualityDeleteAnno : sliceAPI.deleteAnno
+  };
 
   let transformer = null;
   let currentShape = null;
@@ -29,12 +45,9 @@ export function useAnnotation(stage, layer, viewer) {
   const updateTransformerConfig = () => {
     if (transformer) {
       const scale = getScaleCorrection();
-      // Adjust anchor size so they remain clickable/visible but not huge
-      // Reduced from 10 to 5 based on user feedback
       transformer.anchorSize(5);
-      transformer.borderStrokeWidth(1); // Keep 1px screen width
+      transformer.borderStrokeWidth(1);
       transformer.anchorStrokeWidth(1);
-      // Also scale padding so the box doesn't look too tight or too loose
       transformer.padding(5);
     }
   };
@@ -44,7 +57,6 @@ export function useAnnotation(stage, layer, viewer) {
 
     transformer = new Konva.Transformer({
       ignoreStroke: true,
-      // Use a function or update manually on zoom
     });
 
     // Hide delete button during transform
@@ -215,18 +227,23 @@ export function useAnnotation(stage, layer, viewer) {
       if (selectedShapeId.value === shape.id()) {
         createDeleteGroup(shape);
       }
+      if (selectedShapeId.value === shape.id()) {
+        saveSelectedAnno();
+      }
     });
   };
 
   const selectShape = (shape) => {
     if (!shape) {
       selectedShapeId.value = null;
+      selectedAnnoContent.value = '';
       transformer.nodes([]);
       removeDeleteGroup(); // Hide delete button
       layer.value.batchDraw();
       return;
     }
     selectedShapeId.value = shape.id();
+    selectedAnnoContent.value = shape.getAttr('content') || '';
     transformer.nodes([shape]);
     updateTransformerConfig(); // Ensure visible handles
     createDeleteGroup(shape); // Show delete button
@@ -263,7 +280,6 @@ export function useAnnotation(stage, layer, viewer) {
     let shape;
 
     if (currentTool.value === 'polygon') {
-      // Polygon handled in onClick/onMouseMove
       return;
     }
 
@@ -278,7 +294,9 @@ export function useAnnotation(stage, layer, viewer) {
           strokeWidth: 2 * scale,
           id: id,
           draggable: true,
-          name: 'annotation'
+          name: 'annotation',
+          annoType: 'RECTANGLE',
+          content: ''
         });
         break;
       case 'ellipse':
@@ -291,7 +309,9 @@ export function useAnnotation(stage, layer, viewer) {
           strokeWidth: 2 * scale,
           id: id,
           draggable: true,
-          name: 'annotation'
+          name: 'annotation',
+          annoType: 'ELLIPSE',
+          content: ''
         });
         break;
       case 'triangle':
@@ -304,7 +324,9 @@ export function useAnnotation(stage, layer, viewer) {
           strokeWidth: 2 * scale,
           id: id,
           draggable: true,
-          name: 'annotation'
+          name: 'annotation',
+          annoType: 'POLYGON',
+          content: ''
         });
         break;
     }
@@ -354,10 +376,8 @@ export function useAnnotation(stage, layer, viewer) {
     if (currentTool.value === 'polygon') return;
 
     if (currentShape) {
-      // Finished drawing shape
-      // Save to backend?
-      // For now just keep it in memory
-      selectShape(currentShape); // Auto select after draw
+      selectShape(currentShape);
+      saveSelectedAnno();
       currentShape = null;
     }
   };
@@ -396,9 +416,110 @@ export function useAnnotation(stage, layer, viewer) {
       if (isPolyDrawing && currentShape) {
         isPolyDrawing = false;
         selectShape(currentShape);
+        saveSelectedAnno();
         currentShape = null;
       }
     });
+  };
+
+  const inferAnnoType = (shape) => {
+    const explicitType = shape.getAttr('annoType');
+    if (explicitType) return explicitType;
+    const className = shape.className;
+    if (className === 'Rect') return 'RECTANGLE';
+    if (className === 'Ellipse') return 'ELLIPSE';
+    if (className === 'Line' || className === 'RegularPolygon') return 'POLYGON';
+    return 'RECTANGLE';
+  };
+
+  const buildAnnoPayload = (shape, content, sliceId) => {
+    const type = inferAnnoType(shape);
+    let minX = 0;
+    let maxX = 0;
+    let minY = 0;
+    let maxY = 0;
+    let jsonData = {};
+
+    if (type === 'RECTANGLE') {
+      const x = shape.x();
+      const y = shape.y();
+      const w = shape.width();
+      const h = shape.height();
+      const x2 = x + w;
+      const y2 = y + h;
+      minX = Math.min(x, x2);
+      maxX = Math.max(x, x2);
+      minY = Math.min(y, y2);
+      maxY = Math.max(y, y2);
+      jsonData = { x, y, w, h };
+    } else if (type === 'ELLIPSE') {
+      const cx = shape.x();
+      const cy = shape.y();
+      const rx = shape.radiusX();
+      const ry = shape.radiusY();
+      minX = cx - rx;
+      maxX = cx + rx;
+      minY = cy - ry;
+      maxY = cy + ry;
+      jsonData = { cx, cy, rx, ry };
+    } else if (type === 'POLYGON') {
+      const flat = shape.points();
+      const points = [];
+      for (let i = 0; i < flat.length; i += 2) {
+        points.push([flat[i], flat[i + 1]]);
+      }
+      if (points.length > 0) {
+        minX = Math.min(...points.map(p => p[0]));
+        maxX = Math.max(...points.map(p => p[0]));
+        minY = Math.min(...points.map(p => p[1]));
+        maxY = Math.max(...points.map(p => p[1]));
+      }
+      jsonData = { points };
+    }
+
+    return {
+      sliceId,
+      content,
+      maxX,
+      minX,
+      minY,
+      maxY,
+      type,
+      jsonData
+    };
+  };
+
+  const setCurrentSliceId = (sliceId) => {
+    currentSliceId.value = sliceId;
+  };
+
+  const setSelectedAnnoContent = (val) => {
+    selectedAnnoContent.value = val || '';
+  };
+
+  const saveSelectedAnno = async () => {
+    const selectedNode = transformer && transformer.nodes()[0];
+    if (!selectedNode) return;
+    if (!currentSliceId.value) return;
+
+    const content = selectedAnnoContent.value || '';
+    const payload = buildAnnoPayload(selectedNode, content, currentSliceId.value);
+    const dbId = selectedNode.getAttr('dbId');
+
+    try {
+      if (dbId) {
+        payload.id = dbId;
+        await annoApi.updateAnno(payload);
+      } else {
+        const res = await annoApi.insertAnno(payload);
+        if (res && res.data != null) {
+          selectedNode.setAttr('dbId', res.data);
+        }
+      }
+      selectedNode.setAttr('content', content);
+    } catch (e) {
+      console.error("Save annotation failed", e);
+    }
   };
 
   const deleteSelected = async () => {
@@ -408,44 +529,44 @@ export function useAnnotation(stage, layer, viewer) {
     const dbId = selectedNode.getAttr('dbId');
     if (dbId) {
       try {
-        // Call API to delete
-        await sliceAPI.Annodelete({ id: dbId });
-        // If success, remove from canvas
+        await annoApi.deleteAnno({ id: dbId });
       } catch (e) {
         console.error("Delete failed", e);
-        // Should we alert user? For now just log.
       }
     }
 
     selectedNode.destroy();
     transformer.nodes([]);
-    removeDeleteGroup(); // Also remove the button
+    removeDeleteGroup();
     selectedShapeId.value = null;
+    selectedAnnoContent.value = '';
     layer.value.batchDraw();
   };
 
   const loadAnnotations = async (sliceId) => {
     try {
-      const res = await sliceAPI.getAnnos({ sliceId });
+      currentSliceId.value = sliceId;
+      const res = await annoApi.getAnnos({ sliceId });
       if (res.data && Array.isArray(res.data)) {
         res.data.forEach(anno => {
           const scale = getScaleCorrection();
           let shape;
           const jsonData = anno.jsonData;
 
-          // If jsonData is string, parse it
           let data = jsonData;
           if (typeof jsonData === 'string') {
             try { data = JSON.parse(jsonData); } catch (e) { }
           }
 
           const commonAttrs = {
-            id: uuidv4(), // Local Konva ID
-            dbId: anno.id, // Backend ID
+            id: uuidv4(),
+            dbId: anno.id,
             name: 'annotation',
             draggable: true,
             stroke: 'blue',
-            strokeWidth: 2 * scale // Initial scale
+            strokeWidth: 2 * scale,
+            content: anno.content || '',
+            annoType: anno.type
           };
 
           if (anno.type === 'RECTANGLE') {
@@ -493,6 +614,11 @@ export function useAnnotation(stage, layer, viewer) {
     currentTool,
     deleteSelected,
     initDoubleClickListener,
-    loadAnnotations
+    loadAnnotations,
+    selectedShapeId,
+    selectedAnnoContent,
+    setSelectedAnnoContent,
+    saveSelectedAnno,
+    setCurrentSliceId
   };
 }

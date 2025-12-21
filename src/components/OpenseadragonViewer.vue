@@ -58,7 +58,6 @@
     <!-- Bottom Toolbar -->
     <div class="bottom-toolbar">
       <div class="toolbar-group">
-        <!-- Measurement Tool -->
         <a-tooltip title="Measurement" placement="top">
           <a-button shape="circle" :type="activeTool === 'measure' ? 'primary' : 'default'" @click="toggleMeasure">
             <template #icon>
@@ -67,7 +66,6 @@
           </a-button>
         </a-tooltip>
 
-        <!-- Annotation Tool -->
         <a-button-group>
           <a-tooltip title="Annotation" placement="top">
             <a-button :type="activeTool === 'annotation' ? 'primary' : 'default'" @click="toggleAnnotation">
@@ -110,9 +108,44 @@
         </a-button-group>
       </div>
 
-      <!-- Current Tool Indicator -->
       <div v-if="activeTool === 'annotation'" class="tool-indicator">
         Current: {{ currentAnnoTool }}
+      </div>
+    </div>
+
+    <div
+      v-if="activeTool === 'annotation' && selectedAnnoShapeId"
+      class="annotation-floating-toolbar"
+      :style="{
+        position: 'absolute',
+        top: annotationToolbarPosition.top + 'px',
+        left: annotationToolbarPosition.left + 'px',
+        zIndex: 2000,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'stretch',
+        backgroundColor: 'rgba(255,255,255,0.9)',
+        padding: '4px 8px',
+        borderRadius: '4px',
+        boxShadow: '0 0 4px rgba(0,0,0,0.3)',
+        width: '260px'
+      }"
+    >
+      <a-input
+        v-model:value="annoContentInput"
+        placeholder="请输入批注内容"
+        size="small"
+        style="width: 220px; margin-bottom: 8px;"
+      />
+      <div style="display: flex; justify-content: flex-end; gap: 8px;">
+        <a-button type="primary" size="small" @click="handleSaveAnnoContent">保存</a-button>
+        <a-button
+          danger
+          size="small"
+          @click="deleteSelected"
+        >
+          删除
+        </a-button>
       </div>
     </div>
   </div>
@@ -181,8 +214,13 @@ const {
   setTool: setAnnoTool,
   deleteSelected,
   currentTool: currentAnnoTool,
-  loadAnnotations
-} = useAnnotation(stage, layer, viewer);
+  loadAnnotations,
+  selectedShapeId,
+  selectedAnnoContent,
+  setSelectedAnnoContent,
+  saveSelectedAnno,
+  setCurrentSliceId
+} = useAnnotation(stage, layer, viewer, { isQuality: props.isQuality });
 
 // AI Visualization Hook
 const {
@@ -204,6 +242,78 @@ watch(() => props.currentQualityAreas, (newAreas) => {
 
 const activeTool = ref(null); // null, 'measure', 'annotation'
 const selectedAnnoKeys = ref(['rectangle']); // Default
+
+const annoContentInput = ref('');
+const selectedAnnoShapeId = computed(() => selectedShapeId.value);
+const annotationToolbarPosition = ref({
+  top: 0,
+  left: 0
+});
+
+const updateAnnotationToolbarPosition = () => {
+  if (!stage.value || !selectedAnnoShapeId.value) {
+    return;
+  }
+  const shape = stage.value.findOne('#' + selectedAnnoShapeId.value);
+  if (!shape) {
+    return;
+  }
+
+  const bbox = shape.getClientRect({ skipTransform: false });
+  const stageContainer = stage.value.container();
+  const containerWidth = stageContainer.clientWidth || 0;
+  const containerHeight = stageContainer.clientHeight || 0;
+
+  const toolbarWidth = 260;
+  const toolbarHeight = 80;
+
+  const centerX = bbox.x + bbox.width / 2;
+  let top = bbox.y + bbox.height + 8;
+  let left = centerX - toolbarWidth / 2;
+
+  if (left < 0) {
+    left = 0;
+  }
+  if (left + toolbarWidth > containerWidth) {
+    left = Math.max(0, containerWidth - toolbarWidth);
+  }
+
+  if (top + toolbarHeight > containerHeight) {
+    top = bbox.y - toolbarHeight - 8;
+    if (top < 0) {
+      top = 0;
+    }
+  }
+
+  annotationToolbarPosition.value = {
+    left,
+    top
+  };
+};
+
+watch(selectedAnnoContent, (val) => {
+  annoContentInput.value = val || '';
+});
+
+watch(selectedAnnoShapeId, () => {
+  updateAnnotationToolbarPosition();
+});
+
+watch(activeTool, (val) => {
+  if (val === 'annotation') {
+    updateAnnotationToolbarPosition();
+  } else {
+    annotationToolbarPosition.value = {
+      top: 0,
+      left: 0
+    };
+  }
+});
+
+const handleSaveAnnoContent = () => {
+  setSelectedAnnoContent(annoContentInput.value);
+  saveSelectedAnno();
+};
 
 const toggleMeasure = () => {
   if (activeTool.value === 'measure') {
@@ -246,17 +356,24 @@ onMounted(() => {
     // navigatorId: "navigatorDiv" (already default in hook)
   });
 
+  if (viewer.value) {
+    viewer.value.addHandler('update-viewport', () => {
+      if (activeTool.value === 'annotation' && selectedAnnoShapeId.value) {
+        updateAnnotationToolbarPosition();
+      }
+    });
+  }
+
   // Initialize Konva Overlay
   initKonva();
   initQualityKonva();
   initAnnotation();
   initMeasurement();
+  setCurrentSliceId(props.slideId || null);
 
   if (props.slideId) {
     openSlide(props.slideId, props.isQuality ? getQualitySingleSliceData : getSingleSliceData);
-    if (!props.isQuality) {
-      loadAnnotations(props.slideId);
-    }
+    loadAnnotations(props.slideId);
     if (props.aiResult) {
       initAiVisualization(props.slideId, props.aiResult);
     }
@@ -267,9 +384,8 @@ onMounted(() => {
 watch(() => props.slideId, (newId) => {
   if (newId) {
     openSlide(newId, props.isQuality ? getQualitySingleSliceData : getSingleSliceData);
-    if (!props.isQuality) {
-      loadAnnotations(newId);
-    }
+    loadAnnotations(newId);
+    setCurrentSliceId(newId);
     // Re-init AI logic if aiResult exists
     if (props.aiResult) {
       initAiVisualization(newId, props.aiResult);

@@ -331,7 +331,36 @@ export function getAnnos(sliceId) { //获取批注信息
   })
 }
 
-export function insertAnno(data) { //新增批注
+export function getQualityAnnos(sliceId) { //获取质量批注信息
+  return requestQuality({
+    url: '/anno/getAnnos',
+    method: 'get',
+    params: sliceId
+  })
+}
+
+/**
+ * @typedef InsertAnnoData
+ * @property {number} id - 批注ID (update 时必填)
+ * @property {number} sliceId - 切片ID
+ * @property {string} content - 批注内容
+ * @property {number} maxX - 批注最大X坐标
+ * @property {number} minX - 批注最小X坐标
+ * @property {number} minY - 批注最小Y坐标
+ * @property {number} maxY - 批注最大Y坐标
+ * @property {string} type - 批注类型
+ * @property {object} jsonData - 批注数据
+ * @property {number} jsonData.x - 批注左上角X坐标
+ * @property {number} jsonData.y - 批注左上角Y坐标
+ * @property {number} jsonData.w - 批注宽度
+ * @property {number} jsonData.h - 批注高度
+ */
+
+/**
+ * insert annotation
+ * @param {InsertAnnoData} data 
+ */
+export function insertAnno(data) {
   return request({
     url: '/anno/insertAnno',
     method: 'post',
@@ -339,6 +368,10 @@ export function insertAnno(data) { //新增批注
   })
 }
 
+/**
+ * update annotation  
+ * @param {InsertAnnoData} data 
+ */
 export function updateAnno(data) { //修改批注
   return request({
     url: '/anno/updateAnno',
@@ -347,8 +380,46 @@ export function updateAnno(data) { //修改批注
   })
 }
 
-export function Annodelete(data) { //删除批注
+export function deleteAnno(data) { //删除批注
   return request({
+    url: '/anno/deleteAnno',
+    method: 'post',
+    data: data
+  })
+}
+
+// quality annotation 
+
+/**
+ * insert quality annotation
+ * @param {InsertAnnoData} data 
+ */
+export function qualityInsertAnno(data) { //新增质量批注
+  return requestQuality({
+    url: '/anno/insertAnno',
+    method: 'post',
+    data: data
+  })
+}
+
+/**
+ * update quality annotation  
+ * @param {InsertAnnoData} data 
+ */
+export function qualityUpdateAnno(data) {
+  return requestQuality({
+    url: '/anno/updateAnno',
+    method: 'post',
+    data: data
+  })
+}
+
+/**
+ * delete quality annotation  
+ * @param {InsertAnnoData} data 
+ */
+export function qualityDeleteAnno(data) {
+  return requestQuality({
     url: '/anno/deleteAnno',
     method: 'post',
     data: data
@@ -357,7 +428,7 @@ export function Annodelete(data) { //删除批注
 
 //关于诊断报告:
 
-export function updateResult(params) { //更新诊断报告[可能需要修改]
+export function updateResult(params) {
   return request({
     url: '/diagnosis/updateResult',
     method: 'post',
