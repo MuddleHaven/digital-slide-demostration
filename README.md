@@ -125,6 +125,18 @@ VITE_APP_MODELNUMBER=UI-UNIThink
 
 - 生产配置：主服务客户端支持从 `/config.json` 动态加载 `backendUrl`（`src/service/request.js:16-28`），用于部署时灵活切换后端地址。
 
+## 大文件数据（Slices）
+本地压缩（7-Zip，最大压缩 + 分卷）示例：
+
+```bash
+7z a -t7z -mx=9 -m0=lzma2 -md=1024m -mfb=273 -ms=on -mmt=on -v490m "Slices_ultra.7z" "Slices"
+```
+
+说明：
+
+- 分卷大小设置为 490MB 便于在“单文件大小受限”的平台上传
+- 如果需要显著减小体积，通常必须重新编码 JPEG（可能降低画质）或只保留抽样数据用于演示
+
 ## 路由与页面
 
 - 登录：`/login`
