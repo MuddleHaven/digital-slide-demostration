@@ -4,12 +4,14 @@
     <div class="controls-overlay">
       <div id="navigatorDiv" class="navigator"></div>
     </div>
+    <CellResultPanel :viewer="viewerInstance" :cell-data="cellData" />
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, watch, defineProps } from 'vue';
+import { computed, onMounted, watch, defineProps, markRaw } from 'vue';
 import { useCellOpenseadragon } from '@/composables/use-cell-openseadragon';
+import CellResultPanel from '@/components/CellResultPanel.vue';
 
 const props = defineProps({
   slideName: {
@@ -19,9 +21,11 @@ const props = defineProps({
 });
 
 const containerId = 'cell-openseadragon-viewer';
-const { viewer, initViewer, openCellSlide } = useCellOpenseadragon(containerId);
+const { viewer, currentCellSlideData, initViewer, openCellSlide } = useCellOpenseadragon(containerId);
 
 const normalizedSlideName = computed(() => props.slideName || null);
+const viewerInstance = computed(() => (viewer.value ? markRaw(viewer.value) : null));
+const cellData = computed(() => currentCellSlideData.value || null);
 
 onMounted(() => {
   initViewer();
@@ -74,4 +78,3 @@ watch(normalizedSlideName, (newName) => {
   pointer-events: auto;
 }
 </style>
-

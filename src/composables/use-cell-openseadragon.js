@@ -6,7 +6,7 @@ export function useCellOpenseadragon(containerId) {
   const viewer = ref(null);
   const isReady = ref(false);
   const currentCellSlideData = ref(null);
-
+  /** @type {OpenSeadragon.Options} */
   const defaultOptions = {
     id: containerId,
     showNavigator: true,
@@ -67,6 +67,8 @@ export function useCellOpenseadragon(containerId) {
         height: tileMeta.height,
         tileSize: tileMeta.tileSize || 256,
         tileOverlap: tileMeta.tileOverlap || 0,
+        minLevel: tileMeta.minLevel || 0,
+        maxLevel: tileMeta.maxLevel || 0,
         getTileUrl(level, x, y) {
           return `/Slices/${tileMeta.slideName}/${level}/${x}_${y}.${tileFormat}`;
         },

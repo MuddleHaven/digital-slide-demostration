@@ -8,8 +8,8 @@ const cellDetailByName = new Map([
 ])
 
 const tileMetaByName = new Map([
-  [lsil?.data?.slideName, { tileSize: 512, tileOverlap: 0, tileFormat: 'jpeg' }],
-  [slide2513763?.data?.slideName, { tileSize: 1024, tileOverlap: 0, tileFormat: 'jpeg' }],
+  [lsil?.data?.slideName, { minLevel: 0, maxLevel: 16, tileSize: 512, tileOverlap: 0, tileFormat: 'jpeg' }],
+  [slide2513763?.data?.slideName, { minLevel: 10, maxLevel: 15, tileSize: 1024, tileOverlap: 0, tileFormat: 'jpeg' }],
 ])
 
 const buildCellListRecord = (detail) => {
@@ -68,4 +68,3 @@ Mock.mock(/\/tct\/cellSliceDetail(\?.*)?$/, 'get', (options) => {
       : null,
   }
 })
-
