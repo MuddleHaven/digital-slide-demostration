@@ -243,6 +243,39 @@
              </template>
           </a-table>
         </a-tab-pane>
+
+        <a-tab-pane key="cell" tab="细胞切片">
+          <a-spin :spinning="cellLoading">
+            <a-row :gutter="[16, 16]">
+              <a-col
+                v-for="item in cellSlides"
+                :key="item.slideName"
+                :xs="24"
+                :sm="12"
+                :md="8"
+                :lg="6"
+              >
+                <a-card hoverable @click="openCellSlice(item)" :bodyStyle="{ padding: '12px' }">
+                  <template #cover>
+                    <img
+                      :src="item.thumbnailUrl"
+                      style="height: 160px; width: 100%; object-fit: cover;"
+                    />
+                  </template>
+                  <a-card-meta :title="item.slideName">
+                    <template #description>
+                      <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <div>结果：{{ item.slideTotalResult || '-' }}</div>
+                        <div>分级：{{ item.gradingPrompt || '-' }}</div>
+                        <div>炎症：{{ item.inflaLevel || '-' }}</div>
+                      </div>
+                    </template>
+                  </a-card-meta>
+                </a-card>
+              </a-col>
+            </a-row>
+          </a-spin>
+        </a-tab-pane>
       </a-tabs>
     </a-card>
 
@@ -380,6 +413,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+import { message } from 'ant-design-vue';
 import { 
   UploadOutlined, SearchOutlined, DeleteOutlined, 
   FundProjectionScreenOutlined, EyeOutlined, ReloadOutlined, 
@@ -403,15 +437,39 @@ import {
 } from '@/common/sliceTypes.js';
 import FlowingProgressBar from '@/components/FlowingProgressBar.vue';
 import ProcessResult from '@/components/ProcessResult.vue';
+import { getCellSliceList } from '@/service/cell-slice.js';
 
 const router = useRouter();
 const route = useRoute();
 
 const activeTab = ref(route.query.tab || 'result');
+const cellSlides = ref([]);
+const cellLoading = ref(false);
 
 watch(activeTab, (newTab) => {
   router.replace({ query: { ...route.query, tab: newTab } });
+  if (newTab === 'cell' && cellSlides.value.length === 0) {
+    fetchCellSlides();
+  }
 });
+
+const fetchCellSlides = async () => {
+  cellLoading.value = true;
+  try {
+    const res = await getCellSliceList();
+    cellSlides.value = res.data?.records || [];
+  } catch (err) {
+    const text = typeof err === 'string' ? err : (err?.message || '未知错误');
+    message.error(text);
+  } finally {
+    cellLoading.value = false;
+  }
+};
+
+const openCellSlice = (item) => {
+  if (!item?.slideName) return;
+  router.push(`/cell-detail/${item.slideName}`);
+};
 
 const {
   tableData,
@@ -509,6 +567,9 @@ const qualityColumns = [
 // Initial Fetch for Quality Tab
 onMounted(() => {
   qFetchData();
+  if (activeTab.value === 'cell') {
+    fetchCellSlides();
+  }
 });
 
 const getStatusColor = (status) => {

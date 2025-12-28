@@ -386,7 +386,6 @@ watch(() => props.slideId, (newId) => {
     openSlide(newId, props.isQuality ? getQualitySingleSliceData : getSingleSliceData);
     loadAnnotations(newId);
     setCurrentSliceId(newId);
-    // Re-init AI logic if aiResult exists
     if (props.aiResult) {
       initAiVisualization(newId, props.aiResult);
     }
