@@ -61,7 +61,25 @@ export function useQualityVisualization(viewer, containerId) {
 
   // --- Quality Contour Drawing Logic ---
 
-  const drawQualityContours = (areas) => {
+  const mapContourPoints = (contour, options) => {
+    if (!viewer.value || !Array.isArray(contour)) return contour;
+    const curveCols = Number(options?.width);
+    const curveRows = Number(options?.height);
+    if (!curveCols || !curveRows) return contour;
+    const tiledImage = viewer.value.world?.getItemAt(0);
+    if (!tiledImage) return contour;
+    const dziSize = tiledImage.getContentSize();
+    const dziWidth = dziSize.x;
+    const dziHeight = dziSize.y;
+    // console.log('curveCols:', curveCols, 'curveRows:', curveRows);
+    // console.log('dziWidth:', dziWidth, 'dziHeight:', dziHeight);
+    return contour.map(([x, y]) => [
+      (parseFloat(x) / curveCols) * dziWidth,
+      (parseFloat(y) / curveRows) * dziHeight
+    ]);
+  };
+
+  const drawQualityContours = (areas, options = {}) => {
     if (!layer.value) return;
     layer.value.destroyChildren(); // Clear existing
 
@@ -82,7 +100,8 @@ export function useQualityVisualization(viewer, containerId) {
       area.contours.forEach(contour => {
         // contour [[x,y], [x,y]...]
         if (!Array.isArray(contour) || contour.length < 2) return;
-        let points = contour.flat()
+        const mappedContour = mapContourPoints(contour, options);
+        let points = mappedContour.flat();
 
         // Heuristic: If key is 'cut', draw Line. Else Polygon.
         const isLine = area.key === 'cut';

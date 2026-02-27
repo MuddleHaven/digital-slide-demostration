@@ -182,6 +182,10 @@ const props = defineProps({
     type: [String, Number],
     default: null
   },
+  detail: {
+    type: Object,
+    default: null
+  },
   aiResult: {
     type: Object,
     default: null
@@ -239,9 +243,12 @@ const {
 const { initQualityKonva, drawQualityContours } = useQualityVisualization(viewer, 'quality-overlay-container');
 
 // Watch for changes in currentQualityAreas to update contours
-watch(() => props.currentQualityAreas, (newAreas) => {
+watch([() => props.currentQualityAreas, () => props.detail], ([newAreas, detail]) => {
   console.log('useSlideQuality currentQualityAreas changed:', newAreas);
-  drawQualityContours(newAreas);
+  drawQualityContours(newAreas, {
+    width: detail?.width ?? detail?.slice?.width,
+    height: detail?.height ?? detail?.slice?.height
+  });
 }, { deep: true });
 
 const activeTool = ref(null); // null, 'measure', 'annotation'
