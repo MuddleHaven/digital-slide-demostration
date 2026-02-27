@@ -15,7 +15,7 @@ export function useMeasurement(stage, layer, viewer, options = {}) {
 
   let conversionFactor = typeof options.conversionFactor === 'number' && options.conversionFactor > 0
     ? options.conversionFactor
-    : 4;
+    : 0.25;
   let measurementUnit = options.unit || 'μm';
 
   const getScaleCorrection = () => {

@@ -5,7 +5,11 @@
 
     </div>
     <!-- Konva Overlay -->
-    <div id="konva-overlay-container" class="konva-overlay">
+    <div
+      id="konva-overlay-container"
+      class="konva-overlay"
+      :style="{ pointerEvents: isKonvaInteractive ? 'auto' : 'none' }"
+    >
     </div>
     <!-- Quality Overlay (Konva) -->
     <div id="quality-overlay-container" class="konva-overlay" style="pointer-events: none; z-index: 100;">
@@ -242,6 +246,7 @@ watch(() => props.currentQualityAreas, (newAreas) => {
 
 const activeTool = ref(null); // null, 'measure', 'annotation'
 const selectedAnnoKeys = ref(['rectangle']); // Default
+const isKonvaInteractive = computed(() => activeTool.value === 'annotation' || activeTool.value === 'measure');
 
 const annoContentInput = ref('');
 const selectedAnnoShapeId = computed(() => selectedShapeId.value);

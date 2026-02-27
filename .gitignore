@@ -24,6 +24,7 @@ dist-ssr
 *.sw?
 
 /Slices
+Slices.zip
 
 *.7z.001
 *.7z.002
