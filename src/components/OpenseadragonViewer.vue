@@ -8,7 +8,6 @@
     <div
       id="konva-overlay-container"
       class="konva-overlay"
-      :style="{ pointerEvents: isKonvaInteractive ? 'auto' : 'none' }"
     >
     </div>
     <!-- Quality Overlay (Konva) -->
@@ -156,7 +155,7 @@
 </template>
 
 <script setup>
-import { onMounted, watch, defineProps, ref, computed } from 'vue';
+import { onMounted, onUnmounted, watch, defineProps, ref, computed } from 'vue';
 import { useOpenseadragon } from '@/composables/use-openseadragon';
 import { useOsdKonva } from '@/composables/use-osd-konva';
 import { useMeasurement } from '@/composables/use-measurement';
@@ -213,7 +212,24 @@ const { viewer, initViewer, openSlide } = useOpenseadragon(containerId);
 import { getSingleSliceData, getQualitySingleSliceData } from '@/service/slice.js';
 
 // Konva Integration
-const { stage, layer, initKonva } = useOsdKonva(viewer, 'konva-overlay-container');
+const { stage, layer, initKonva } = useOsdKonva(viewer, 'konva-overlay-container', {
+  enablePan: () => activeTool.value === null,
+  shouldPan: (e) => {
+    if (activeTool.value !== null) return false;
+    const target = e?.target;
+    if (!target) return true;
+    if (target.hasName && (
+      target.hasName('annotation') ||
+      target.hasName('annotation-delete-group') ||
+      target.hasName('delete-icon') ||
+      target.hasName('delete-text') ||
+      target.hasName('measurement-delete-group') ||
+      target.hasName('measurement-delete-icon') ||
+      target.hasName('measurement-delete-text')
+    )) return false;
+    return true;
+  }
+});
 const { activateMeasurement, deactivateMeasurement, initMeasurement } = useMeasurement(stage, layer, viewer);
 const {
   initAnnotation,
@@ -253,8 +269,6 @@ watch([() => props.currentQualityAreas, () => props.detail], ([newAreas, detail]
 
 const activeTool = ref(null); // null, 'measure', 'annotation'
 const selectedAnnoKeys = ref(['rectangle']); // Default
-const isKonvaInteractive = computed(() => activeTool.value === 'annotation' || activeTool.value === 'measure');
-
 const annoContentInput = ref('');
 const selectedAnnoShapeId = computed(() => selectedShapeId.value);
 const annotationToolbarPosition = ref({
@@ -362,11 +376,26 @@ const handleAnnoMenuClick = ({ key }) => {
   }
 };
 
+const handleGlobalKeydown = (e) => {
+  if (e.key !== 'Escape') return;
+  if (activeTool.value === 'measure') {
+    activeTool.value = null;
+    deactivateMeasurement();
+    return;
+  }
+  if (activeTool.value === 'annotation') {
+    activeTool.value = null;
+    deactivateAnnotation();
+  }
+};
+
 onMounted(() => {
   initViewer({
     // Custom options override if needed
     // navigatorId: "navigatorDiv" (already default in hook)
   });
+
+  window.addEventListener('keydown', handleGlobalKeydown);
 
   if (viewer.value) {
     viewer.value.addHandler('update-viewport', () => {
@@ -390,6 +419,10 @@ onMounted(() => {
       initAiVisualization(props.slideId, props.aiResult);
     }
   }
+});
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleGlobalKeydown);
 });
 
 // Watch for slide ID changes to load new slide

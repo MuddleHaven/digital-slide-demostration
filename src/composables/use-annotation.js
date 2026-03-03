@@ -224,17 +224,26 @@ export function useAnnotation(stage, layer, viewer, options = {}) {
     });
   };
 
+  const updateDraggableState = (selectedId) => {
+    if (!layer.value) return;
+    layer.value.find('.annotation').forEach(node => {
+      node.draggable(node.id() === selectedId);
+    });
+  };
+
   const selectShape = (shape) => {
     if (!shape) {
       selectedShapeId.value = null;
       selectedAnnoContent.value = '';
       transformer.nodes([]);
+      updateDraggableState(null);
       removeDeleteGroup(); // Hide delete button
       layer.value.batchDraw();
       return;
     }
     selectedShapeId.value = shape.id();
     selectedAnnoContent.value = shape.getAttr('content') || '';
+    updateDraggableState(shape.id());
     transformer.nodes([shape]);
     updateTransformerConfig(); // Ensure visible handles
     createDeleteGroup(shape); // Show delete button
@@ -286,7 +295,7 @@ export function useAnnotation(stage, layer, viewer, options = {}) {
           stroke: 'blue',
           strokeWidth: 2 * scale,
           id: id,
-          draggable: true,
+          draggable: false,
           name: 'annotation',
           annoType: 'RECTANGLE',
           content: ''
@@ -301,7 +310,7 @@ export function useAnnotation(stage, layer, viewer, options = {}) {
           stroke: 'blue',
           strokeWidth: 2 * scale,
           id: id,
-          draggable: true,
+          draggable: false,
           name: 'annotation',
           annoType: 'ELLIPSE',
           content: ''
@@ -316,7 +325,7 @@ export function useAnnotation(stage, layer, viewer, options = {}) {
           stroke: 'blue',
           strokeWidth: 2 * scale,
           id: id,
-          draggable: true,
+          draggable: false,
           name: 'annotation',
           annoType: 'POLYGON',
           content: ''
@@ -390,7 +399,7 @@ export function useAnnotation(stage, layer, viewer, options = {}) {
           strokeWidth: 2 * scale,
           closed: true,
           id: id,
-          draggable: true,
+          draggable: false,
           name: 'annotation'
         });
         bindShapeEvents(currentShape);
@@ -556,7 +565,7 @@ export function useAnnotation(stage, layer, viewer, options = {}) {
             id: uuidv4(),
             dbId: anno.id,
             name: 'annotation',
-            draggable: true,
+            draggable: false,
             stroke: 'blue',
             strokeWidth: 2 * scale,
             content: anno.content || '',

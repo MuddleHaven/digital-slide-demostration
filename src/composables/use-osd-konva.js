@@ -2,7 +2,7 @@ import Konva from 'konva';
 import OpenSeadragon from 'openseadragon';
 import { ref, onUnmounted, watch } from 'vue';
 
-export function useOsdKonva(viewer, containerId) {
+export function useOsdKonva(viewer, containerId, options = {}) {
   const stage = ref(null);
   const layer = ref(null);
   const isReady = ref(false);
@@ -31,6 +31,19 @@ export function useOsdKonva(viewer, containerId) {
     // Forward Zoom (Wheel) events from Konva container to OSD
     container.addEventListener('wheel', handleWheel, { passive: false });
 
+    const allowPan = () => {
+      if (typeof options.enablePan === 'function') {
+        return options.enablePan();
+      }
+      return true;
+    };
+    const shouldPan = (e) => {
+      if (typeof options.shouldPan === 'function') {
+        return options.shouldPan(e);
+      }
+      return true;
+    };
+
     // Implement Right-Click Pan
     stage.value.on('contentContextmenu', (e) => {
       e.evt.preventDefault(); // Stop context menu
@@ -38,11 +51,17 @@ export function useOsdKonva(viewer, containerId) {
 
     let isPanning = false;
     let lastPoint = null;
+    let isLeftPanning = false;
+    let lastLeftPoint = null;
 
     stage.value.on('mousedown', (e) => {
       if (e.evt.button === 2) { // Right click
         isPanning = true;
         lastPoint = { x: e.evt.clientX, y: e.evt.clientY };
+      }
+      if (e.evt.button === 0 && allowPan() && shouldPan(e)) {
+        isLeftPanning = true;
+        lastLeftPoint = { x: e.evt.clientX, y: e.evt.clientY };
       }
     });
 
@@ -55,10 +74,24 @@ export function useOsdKonva(viewer, containerId) {
         const viewportPoint = viewer.value.viewport.deltaPointsFromPixels(
           new OpenSeadragon.Point(-deltaX, -deltaY)
         );
+        // pan by openseadragon
         viewer.value.viewport.panBy(viewportPoint);
         viewer.value.viewport.applyConstraints();
 
         lastPoint = currentPoint;
+      }
+      if (isLeftPanning && lastLeftPoint) {
+        const currentPoint = { x: e.evt.clientX, y: e.evt.clientY };
+        const deltaX = currentPoint.x - lastLeftPoint.x;
+        const deltaY = currentPoint.y - lastLeftPoint.y;
+
+        const viewportPoint = viewer.value.viewport.deltaPointsFromPixels(
+          new OpenSeadragon.Point(-deltaX, -deltaY)
+        );
+        viewer.value.viewport.panBy(viewportPoint);
+        viewer.value.viewport.applyConstraints();
+
+        lastLeftPoint = currentPoint;
       }
     });
 
@@ -66,6 +99,10 @@ export function useOsdKonva(viewer, containerId) {
       if (e.evt.button === 2) {
         isPanning = false;
         lastPoint = null;
+      }
+      if (e.evt.button === 0) {
+        isLeftPanning = false;
+        lastLeftPoint = null;
       }
     });
 
