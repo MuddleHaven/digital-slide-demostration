@@ -13,7 +13,7 @@
 
     <!-- Left Sidebar: Floating Slide List -->
     <div class="absolute top-5 left-5 z-101 pointer-events-auto">
-      <a-button type="primary" shape="circle" size="large" @click="goBack">
+      <a-button class="back-button" type="primary" shape="circle" size="large" @click="goBack">
         <template #icon><ArrowLeftOutlined /></template>
       </a-button>
     </div>
@@ -248,4 +248,22 @@ onMounted(() => {
   initSlideList();
 });
 </script>
+
+<style scoped>
+.back-button :deep(.ant-btn) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-button :deep(.anticon) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-button :deep(svg) {
+  display: block;
+}
+</style>
 
