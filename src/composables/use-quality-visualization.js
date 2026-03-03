@@ -46,7 +46,10 @@ export function useQualityVisualization(viewer, containerId) {
     const rotation = viewport.getRotation(true);
     stage.value.rotation(rotation);
 
-    stage.value.batchDraw();
+    const flip = viewport.getFlip();
+    stage.value.container().style.transform = flip ? 'scaleX(-1)' : 'scaleX(1)';
+
+    stage.value.draw();
   };
 
   const handleResize = () => {
